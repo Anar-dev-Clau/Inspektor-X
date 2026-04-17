@@ -25,524 +25,309 @@
     --text2:   #8aafc0;
     --text3:   #4a6e82;
     --red:     #ff5a5a;
-    --green:   #00c2a8;
     --r:       14px;
     --rsm:     8px;
   }
 
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; overflow:hidden; user-select:none; }
 
-  html, body {
-    height: 100%;
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    overflow: hidden;
-    user-select: none;
-  }
+  .screen { position:fixed; inset:0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity 0.2s ease; }
+  .screen.active { opacity:1; pointer-events:all; }
 
-  .screen {
-    position: fixed; inset: 0;
-    display: flex; flex-direction: column;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.2s ease;
-  }
-  .screen.active { opacity: 1; pointer-events: all; }
-
-  /* ── AVAKUVA ── */
-  #screen-home {
-    background: var(--bg);
-    justify-content: space-between;
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-  }
-  .home-header {
-    padding: 24px 24px 0;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .app-title {
-    font-family: 'Syne', sans-serif;
-    font-size: 18px; font-weight: 800;
-    letter-spacing: .08em; text-transform: uppercase;
-    color: var(--accent);
-  }
-  .app-sub { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-top: 2px; }
-
-  .session-count {
-    text-align: right;
-  }
-  .session-count .num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); }
-  .session-count .lbl { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
-
-  .home-body {
-    flex: 1; overflow-y: auto; padding: 16px 24px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-
-  /* Sessioonid nimekirjas */
-  .session-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 14px 16px;
-    display: flex; align-items: center; gap: 14px;
-    cursor: pointer; transition: border-color .15s;
-  }
-  .session-card:active { border-color: var(--accent); }
-  .session-card.active-session { border-color: var(--accent); }
-
-  .session-status {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--text3); flex-shrink: 0;
-  }
-  .session-status.open { background: var(--accent); animation: blink 2s ease infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  .session-info { flex: 1; min-width: 0; }
-  .session-name {
-    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
-    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .session-meta { font-size: 10px; color: var(--text3); margin-top: 3px; letter-spacing: .04em; }
-
-  .session-arrow { font-size: 16px; color: var(--text3); }
-
-  .empty-state {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 12px; color: var(--text3); padding: 48px; text-align: center;
-  }
-  .empty-icon { font-size: 44px; opacity: .3; }
-  .empty-text { font-size: 13px; line-height: 1.6; }
-
-  .home-nav { padding: 0 24px 12px; display: flex; gap: 10px; }
-  .nav-btn {
-    flex: 1; height: 52px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    cursor: pointer; font-family: 'Syne', sans-serif;
-    font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-    color: var(--text2); transition: all .15s;
-  }
-  .nav-btn:active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
-  .nav-btn.primary {
-    background: var(--accent); border-color: var(--accent); color: #0d1f2d;
-  }
-  .nav-btn.primary:active { opacity: .85; transform: scale(.97); }
-  .nav-btn.icon-only { flex: 0; width: 52px; }
-
-  /* ── UUS SESSIOON ── */
-  #screen-new-session {
-    background: var(--bg);
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-  }
-  .modal-header {
-    padding: 20px 24px 16px;
-    display: flex; align-items: center; gap: 12px;
+  /* ── ÜLDISED KOMPONENDID ── */
+  .page-header {
+    padding: env(safe-area-inset-top,16px) 24px 12px;
+    padding-top: calc(env(safe-area-inset-top,0px) + 16px);
+    display:flex; align-items:center; gap:12px; flex-shrink:0;
   }
   .back-btn {
-    width: 36px; height: 36px; border-radius: 50%;
-    background: var(--surface); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; cursor: pointer; flex-shrink: 0;
+    width:36px; height:36px; border-radius:50%;
+    background:var(--surface); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; flex-shrink:0;
   }
-  .modal-title {
-    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--text);
-  }
-  .modal-body { flex: 1; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
-
-  .field-label {
-    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
-    color: var(--text3); margin-bottom: 8px;
-  }
-  .field-input {
-    width: 100%; background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 14px 16px;
-    color: var(--text); font-family: 'DM Mono', monospace; font-size: 15px;
-    outline: none; caret-color: var(--accent);
-    transition: border-color .15s;
-  }
-  .field-input:focus { border-color: var(--accent); }
-  .field-input::placeholder { color: var(--text3); }
-
-  .field-hint { font-size: 11px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
-
-  .modal-actions { padding: 16px 24px; }
-  .btn-primary {
-    width: 100%; height: 54px; border-radius: var(--r);
-    background: var(--accent); border: none; color: #0d1f2d;
-    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
-    letter-spacing: .1em; text-transform: uppercase;
-    cursor: pointer; transition: all .15s;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-  }
-  .btn-primary:active { transform: scale(.97); opacity: .9; }
-  .btn-primary.orange { background: var(--accent2); }
-
-  /* ── SESSIOON (kirjete vaade) ── */
-  #screen-session {
-    background: var(--bg);
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-    display: flex; flex-direction: column;
-  }
-  .session-header {
-    padding: 16px 24px 12px;
-    display: flex; align-items: flex-start; gap: 12px;
-  }
-  .session-header-info { flex: 1; min-width: 0; }
-  .session-header-name {
-    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
-    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .session-header-meta { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: .04em; }
+  .page-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; flex:1; }
+  .page-title.accent { color:var(--accent); }
+  .page-subtitle { font-size:10px; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-top:1px; }
 
   .btn-icon {
-    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    background: var(--surface); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px; cursor: pointer; transition: all .15s;
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:var(--surface); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; cursor:pointer; transition:all .15s;
   }
-  .btn-icon:active { border-color: var(--accent); color: var(--accent); }
-  .btn-icon.danger:active { border-color: var(--red); color: var(--red); }
+  .btn-icon:active { border-color:var(--accent); }
+  .btn-icon.danger:active { border-color:var(--red); color:var(--red); }
 
-  .kirjed-list {
-    flex: 1; overflow-y: auto; padding: 0 24px 12px;
-    display: flex; flex-direction: column; gap: 10px;
+  .page-body { flex:1; overflow-y:auto; padding:0 24px 12px; display:flex; flex-direction:column; gap:10px; }
+  .page-nav {
+    padding: 8px 24px;
+    padding-bottom: calc(env(safe-area-inset-bottom,0px) + 12px);
+    display:flex; gap:10px; flex-shrink:0;
   }
 
+  .nav-btn {
+    flex:1; height:52px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    cursor:pointer; font-family:'Syne',sans-serif;
+    font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text2); transition:all .15s;
+  }
+  .nav-btn:active { background:var(--bg3); border-color:var(--accent); color:var(--accent); }
+  .nav-btn.primary { background:var(--accent); border-color:var(--accent); color:#0d1f2d; }
+  .nav-btn.primary:active { opacity:.85; transform:scale(.97); }
+  .nav-btn.amber { background:var(--accent2); border-color:var(--accent2); color:#0d1f2d; }
+  .nav-btn.amber:active { opacity:.85; transform:scale(.97); }
+  .nav-btn.icon-only { flex:0; width:52px; }
+
+  /* ── KAARDID ── */
+  .card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r); cursor:pointer; transition:border-color .15s;
+  }
+  .card:active { border-color:var(--accent); }
+  .card-inner { padding:14px 16px; display:flex; align-items:center; gap:12px; }
+
+  .status-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); flex-shrink:0; }
+  .status-dot.open { background:var(--accent); animation:blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .card-info { flex:1; min-width:0; }
+  .card-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-meta { font-size:10px; color:var(--text3); margin-top:3px; letter-spacing:.04em; }
+  .card-arrow { font-size:18px; color:var(--text3); }
+
+  /* Objekt kaart — erinev */
+  .obj-card {
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r); overflow:hidden; cursor:pointer; transition:border-color .15s;
+  }
+  .obj-card:active { border-color:var(--accent2); }
+  .obj-card-header { padding:10px 14px; display:flex; align-items:center; gap:10px; }
+  .obj-nr {
+    width:28px; height:28px; border-radius:50%;
+    background:var(--bg3); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-size:11px; font-weight:800; color:var(--text3);
+    flex-shrink:0;
+  }
+  .obj-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); flex:1; }
+  .obj-meta { font-size:10px; color:var(--text3); }
+  .obj-thumbs { display:flex; gap:4px; padding:0 14px 10px; overflow-x:auto; }
+  .obj-thumb { width:56px; height:56px; border-radius:6px; object-fit:cover; flex-shrink:0; border:1px solid var(--border); }
+  .obj-thumb-empty { width:56px; height:56px; border-radius:6px; background:var(--bg3); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--border); }
+
+  /* Kirje kaart */
   .kirje-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); overflow: hidden; cursor: pointer;
-    display: flex; align-items: stretch; min-height: 72px; transition: border-color .15s;
+    background:var(--bg3); border:1px solid var(--border);
+    border-radius:var(--rsm); overflow:hidden; cursor:pointer;
+    display:flex; align-items:stretch; min-height:64px; transition:border-color .15s;
   }
-  .kirje-card:active { border-color: var(--accent2); }
-  .kirje-num {
-    width: 36px; background: var(--bg3); flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: var(--text3);
-    font-family: 'Syne', sans-serif;
-  }
-  .kirje-thumb { width: 72px; min-height: 72px; flex-shrink: 0; object-fit: cover; display: block; }
-  .kirje-thumb-empty {
-    width: 72px; min-height: 72px; flex-shrink: 0;
-    background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 22px;
-  }
-  .kirje-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
-  .kirje-time { font-size: 10px; color: var(--text3); letter-spacing: .04em; }
-  .kirje-badges { display: flex; gap: 6px; }
-  .badge {
-    font-size: 10px; padding: 2px 7px; border-radius: 4px;
-    background: var(--bg3); color: var(--text3);
-  }
-  .badge.audio { color: var(--accent); }
+  .kirje-card:active { border-color:var(--accent2); }
+  .kirje-num { width:32px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--text3); font-family:'Syne',sans-serif; flex-shrink:0; }
+  .kirje-thumb { width:64px; min-height:64px; flex-shrink:0; object-fit:cover; display:block; }
+  .kirje-thumb-empty { width:64px; min-height:64px; flex-shrink:0; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .kirje-body { flex:1; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .kirje-time { font-size:10px; color:var(--text3); }
+  .kirje-badges { display:flex; gap:5px; }
+  .badge { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg2); color:var(--text3); }
+  .badge.audio { color:var(--accent); }
 
-  .session-nav { padding: 8px 24px 0; display: flex; gap: 10px; }
+  /* ── TÜHI OLEK ── */
+  .empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text3); padding:48px; text-align:center; }
+  .empty-icon { font-size:44px; opacity:.3; }
+  .empty-text { font-size:13px; line-height:1.6; }
+
+  /* ── VORM ── */
+  .form-body { flex:1; padding:0 24px; display:flex; flex-direction:column; gap:16px; }
+  .field-label { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
+  .field-input {
+    width:100%; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r); padding:14px 16px;
+    color:var(--text); font-family:'DM Mono',monospace; font-size:15px;
+    outline:none; caret-color:var(--accent); transition:border-color .15s;
+  }
+  .field-input:focus { border-color:var(--accent); }
+  .field-input::placeholder { color:var(--text3); }
+  .field-hint { font-size:11px; color:var(--text3); margin-top:6px; line-height:1.5; }
+  .form-actions { padding:14px 24px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); }
 
   /* ── KAAMERA ── */
-  #screen-camera { background: #000; position: relative; }
-  #video-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cam-overlay {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column; justify-content: space-between;
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-  }
-  .cam-top { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
-  .cam-session-name {
-    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
-    color: rgba(255,255,255,.8); letter-spacing: .06em;
-    background: rgba(0,0,0,.4); padding: 6px 12px; border-radius: 20px;
-    max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .cam-close {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.15);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; cursor: pointer; color: #fff;
-  }
-  .cam-bottom {
-    padding: 0 24px 32px;
-    display: flex; align-items: center; justify-content: center; gap: 40px;
-  }
-  .shutter-btn {
-    width: 80px; height: 80px; border-radius: 50%;
-    background: #fff; border: 4px solid rgba(255,255,255,.4);
-    cursor: pointer; transition: transform .1s;
-    box-shadow: 0 0 0 2px rgba(255,255,255,.5);
-  }
-  .shutter-btn:active { transform: scale(.9); }
-  .flip-btn {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.2);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 22px; cursor: pointer; color: #fff;
-  }
-  .flash {
-    position: fixed; inset: 0; background: #fff;
-    opacity: 0; pointer-events: none; z-index: 999; transition: opacity .05s;
-  }
-  .flash.on { opacity: 1; }
+  #screen-camera { background:#000; position:relative; }
+  #video-preview { width:100%; height:100%; object-fit:cover; display:block; }
+  .cam-overlay { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0; }
+  .cam-top { padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
+  .cam-label { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:rgba(255,255,255,.85); background:rgba(0,0,0,.45); padding:5px 12px; border-radius:20px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cam-close { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff; }
+  .cam-bottom { padding:0 24px 32px; display:flex; align-items:center; justify-content:center; gap:40px; }
+  .shutter-btn { width:80px; height:80px; border-radius:50%; background:#fff; border:4px solid rgba(255,255,255,.4); cursor:pointer; transition:transform .1s; box-shadow:0 0 0 2px rgba(255,255,255,.5); }
+  .shutter-btn:active { transform:scale(.9); }
+  .flip-btn { width:48px; height:48px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; color:#fff; }
+  .flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:999; transition:opacity .05s; }
+  .flash.on { opacity:1; }
 
-  /* ── SALVESTA KIRJE ── */
-  #screen-save {
-    background: var(--bg);
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-  }
-  .save-header { padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-  .save-title {
-    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--text2);
-  }
-  .save-body {
-    flex: 1; overflow-y: auto; padding: 0 24px;
-    display: flex; flex-direction: column; gap: 14px;
-  }
-  #captured-img {
-    width: 100%; border-radius: var(--r); max-height: 280px;
-    object-fit: cover; border: 1px solid var(--border); display: block;
-  }
-  .audio-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 14px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .audio-lbl { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); }
-  .audio-row { display: flex; align-items: center; gap: 10px; }
-  .rec-btn {
-    flex: 1; height: 44px; border-radius: var(--rsm);
-    background: var(--bg3); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    cursor: pointer; font-family: 'Syne', sans-serif;
-    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-    color: var(--text2); transition: all .15s;
-  }
-  .rec-btn.recording {
-    background: rgba(255,90,90,.12); border-color: var(--red); color: var(--red);
-    animation: pulse 1.5s ease infinite;
-  }
-  .rec-btn.done { border-color: var(--accent); color: var(--accent); }
-  @keyframes pulse {
-    0%,100% { box-shadow: 0 0 0 0 rgba(255,90,90,.3); }
-    50%      { box-shadow: 0 0 0 6px rgba(255,90,90,0); }
-  }
-  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-  .rec-btn.recording .rec-dot { animation: bdot 1s step-end infinite; }
+  /* ── SALVESTA ── */
+  .save-body { flex:1; overflow-y:auto; padding:0 24px; display:flex; flex-direction:column; gap:14px; }
+  #captured-img { width:100%; border-radius:var(--r); max-height:260px; object-fit:cover; border:1px solid var(--border); display:block; }
+  .audio-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px; display:flex; flex-direction:column; gap:10px; }
+  .audio-lbl { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); }
+  .audio-row { display:flex; align-items:center; gap:10px; }
+  .rec-btn { flex:1; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:all .15s; }
+  .rec-btn.recording { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); animation:pulse 1.5s ease infinite; }
+  .rec-btn.done { border-color:var(--accent); color:var(--accent); }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,.3)} 50%{box-shadow:0 0 0 6px rgba(255,90,90,0)} }
+  .rec-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+  .rec-btn.recording .rec-dot { animation:bdot 1s step-end infinite; }
   @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0} }
-  .rec-timer { font-size: 11px; color: var(--red); letter-spacing: .1em; min-width: 38px; text-align: center; }
-  .play-btn {
-    width: 44px; height: 44px; border-radius: var(--rsm);
-    background: var(--bg3); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; cursor: pointer; color: var(--text2); transition: all .15s;
-  }
-  .play-btn:active { border-color: var(--accent); color: var(--accent); }
-  .hidden { display: none !important; }
-  .save-actions { padding: 14px 24px; display: flex; gap: 10px; }
-  .btn-save {
-    flex: 1; height: 52px; border-radius: var(--r);
-    background: var(--accent); border: none; color: #0d1f2d;
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
-    letter-spacing: .1em; text-transform: uppercase;
-    cursor: pointer; transition: all .15s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn-save:active { transform: scale(.97); opacity: .9; }
-  .btn-discard {
-    width: 52px; height: 52px; border-radius: var(--r);
-    background: var(--surface); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; cursor: pointer; color: var(--text3); transition: all .15s;
-  }
-  .btn-discard:active { border-color: var(--red); color: var(--red); }
+  .rec-timer { font-size:11px; color:var(--red); letter-spacing:.1em; min-width:38px; text-align:center; }
+  .play-btn { width:44px; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:var(--text2); transition:all .15s; }
+  .play-btn:active { border-color:var(--accent); color:var(--accent); }
+  .hidden { display:none !important; }
+  .save-actions { padding:14px 24px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); display:flex; gap:10px; }
+  .btn-save { flex:1; height:52px; border-radius:var(--r); background:var(--accent); border:none; color:#0d1f2d; font-family:'Syne',sans-serif; font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .btn-save:active { transform:scale(.97); opacity:.9; }
+  .btn-discard { width:52px; height:52px; border-radius:var(--r); background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; color:var(--text3); transition:all .15s; }
+  .btn-discard:active { border-color:var(--red); color:var(--red); }
 
   /* ── DETAIL ── */
-  #screen-detail {
-    background: var(--bg);
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-    display: flex; flex-direction: column;
-  }
-  .detail-header { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-  .detail-time { font-size: 11px; color: var(--text3); letter-spacing: .06em; }
-  .detail-body {
-    flex: 1; overflow-y: auto; padding: 0 24px;
-    display: flex; flex-direction: column; gap: 14px;
-  }
-  #detail-img { width: 100%; border-radius: var(--r); border: 1px solid var(--border); display: block; }
-  .detail-audio {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 16px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .detail-play {
-    width: 48px; height: 48px; border-radius: 50%;
-    background: var(--accent); border: none;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px; cursor: pointer; flex-shrink: 0; transition: opacity .15s; color: #0d1f2d;
-  }
-  .detail-play:active { opacity: .8; }
-  .detail-audio-lbl { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; }
-  .detail-audio-dur { font-size: 14px; color: var(--text); margin-top: 3px; }
+  .detail-audio { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; align-items:center; gap:14px; }
+  .detail-play { width:48px; height:48px; border-radius:50%; background:var(--accent); border:none; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0; transition:opacity .15s; color:#0d1f2d; }
+  .detail-play:active { opacity:.8; }
+  .detail-audio-lbl { font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
+  .detail-audio-dur { font-size:14px; color:var(--text); margin-top:3px; }
 
-  /* ── RAPORT KUVA ── */
-  #screen-report {
-    background: var(--bg);
-    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
-    display: flex; flex-direction: column;
-  }
-  .report-header { padding: 16px 24px 12px; display: flex; align-items: center; gap: 12px; }
-  .report-title {
-    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
-    letter-spacing: .08em; text-transform: uppercase; color: var(--text);
-    flex: 1;
-  }
-  .report-body { flex: 1; overflow-y: auto; padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
+  /* ── RAPORT ── */
+  .report-info-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:10px; }
+  .report-row { display:flex; justify-content:space-between; align-items:center; }
+  .report-lbl { font-size:11px; color:var(--text3); }
+  .report-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
+  .report-preview { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+  .report-preview-hdr { padding:10px 14px; background:var(--bg3); font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
+  .report-thumbs { padding:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+  .report-thumb { aspect-ratio:1; border-radius:5px; object-fit:cover; border:1px solid var(--border); display:block; width:100%; }
+  .report-thumb-empty { aspect-ratio:1; border-radius:5px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:16px; border:1px solid var(--border); }
 
-  .report-info-box {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 16px;
-    display: flex; flex-direction: column; gap: 10px;
-  }
-  .report-row { display: flex; justify-content: space-between; align-items: center; }
-  .report-lbl { font-size: 11px; color: var(--text3); letter-spacing: .06em; }
-  .report-val { font-size: 13px; color: var(--text); font-family: 'Syne', sans-serif; font-weight: 700; }
+  /* ── HOIATUS ── */
+  .warning-banner { margin:0 24px 10px; background:rgba(240,165,0,.12); border:1px solid var(--accent2); border-radius:var(--rsm); padding:10px 14px; font-size:11px; color:var(--accent2); line-height:1.5; }
 
-  .report-preview {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--r); overflow: hidden;
-  }
-  .report-preview-header {
-    padding: 10px 14px; background: var(--bg3);
-    font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase;
-  }
-  .report-thumbs {
-    padding: 12px; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px;
-  }
-  .report-thumb {
-    aspect-ratio: 1; border-radius: 6px; object-fit: cover;
-    border: 1px solid var(--border); display: block; width: 100%;
-  }
-  .report-thumb-empty {
-    aspect-ratio: 1; border-radius: 6px;
-    background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 20px;
-    border: 1px solid var(--border);
-  }
-  .report-actions { padding: 14px 24px; display: flex; flex-direction: column; gap: 10px; }
+  /* ── TOAST + DIALOG ── */
+  .toast { position:fixed; bottom:calc(env(safe-area-inset-bottom,20px) + 90px); left:50%; transform:translateX(-50%) translateY(16px); background:var(--surface); border:1px solid var(--border); border-radius:var(--rsm); padding:10px 20px; font-size:12px; letter-spacing:.04em; opacity:0; transition:all .22s ease; pointer-events:none; white-space:nowrap; z-index:1000; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .dialog-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s; }
+  .dialog-bg.show { opacity:1; pointer-events:all; }
+  .dialog-box { width:100%; background:var(--bg2); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding:24px 24px calc(env(safe-area-inset-bottom,0px) + 24px); transform:translateY(100%); transition:transform .25s ease; }
+  .dialog-bg.show .dialog-box { transform:translateY(0); }
+  .dialog-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:8px; }
+  .dialog-body { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
+  .dialog-actions { display:flex; flex-direction:column; gap:10px; }
+  .dialog-btn { width:100%; height:50px; border-radius:var(--r); border:1px solid var(--border); font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+  .dialog-btn.danger { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); }
+  .dialog-btn.cancel { background:var(--surface); color:var(--text2); }
 
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom,20px) + 90px);
-    left: 50%; transform: translateX(-50%) translateY(16px);
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--rsm); padding: 10px 20px;
-    font-size: 12px; letter-spacing: .04em;
-    opacity: 0; transition: all .22s ease;
-    pointer-events: none; white-space: nowrap; z-index: 1000;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── DIALOG ── */
-  .dialog-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,.75);
-    z-index: 500; display: flex; align-items: flex-end;
-    opacity: 0; pointer-events: none; transition: opacity .2s;
-  }
-  .dialog-bg.show { opacity: 1; pointer-events: all; }
-  .dialog-box {
-    width: 100%; background: var(--bg2);
-    border-top: 1px solid var(--border); border-radius: 20px 20px 0 0;
-    padding: 24px 24px calc(env(safe-area-inset-bottom,20px) + 24px);
-    transform: translateY(100%); transition: transform .25s ease;
-  }
-  .dialog-bg.show .dialog-box { transform: translateY(0); }
-  .dialog-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
-  .dialog-body { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
-  .dialog-actions { display: flex; flex-direction: column; gap: 10px; }
-  .dialog-btn {
-    width: 100%; height: 50px; border-radius: var(--r); border: 1px solid var(--border);
-    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
-    letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .15s;
-  }
-  .dialog-btn.danger { background: rgba(255,90,90,.12); border-color: var(--red); color: var(--red); }
-  .dialog-btn.cancel { background: var(--surface); color: var(--text2); }
-
-  ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar { width:3px; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 </style>
 </head>
 <body>
-
 <div class="flash" id="flash"></div>
 
-<!-- AVAKUVA -->
+<!-- ══ AVAKUVA — sessioonide nimekiri ══ -->
 <div class="screen active" id="screen-home">
-  <div class="home-header">
-    <div>
-      <div class="app-title">Inspektor X</div>
-      <div class="app-sub">Visuaalne kontroll</div>
+  <div class="page-header" style="padding-top:calc(env(safe-area-inset-top,0px) + 20px)">
+    <div style="flex:1">
+      <div class="page-title accent">Inspektor X</div>
+      <div class="page-subtitle">Visuaalne kontroll</div>
     </div>
-    <div class="session-count">
-      <div class="num" id="home-count">0</div>
-      <div class="lbl">sessiooni</div>
-    </div>
-  </div>
-  <div class="home-body" id="session-list">
-    <div class="empty-state">
-      <div class="empty-icon">🔍</div>
-      <div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div>
+    <div style="text-align:right">
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800" id="home-count">0</div>
+      <div style="font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">sessiooni</div>
     </div>
   </div>
-  <div class="home-nav">
-    <div class="nav-btn primary" id="btn-new-session">
-      <span>＋</span><span>Uus inspektsioon</span>
-    </div>
+  <div id="warn-banner" class="warning-banner hidden"></div>
+  <div class="page-body" id="session-list"></div>
+  <div class="page-nav">
+    <div class="nav-btn primary" id="btn-new-session"><span>＋</span><span>Uus inspektsioon</span></div>
     <div class="nav-btn icon-only" id="btn-close">✕</div>
   </div>
 </div>
 
-<!-- UUS SESSIOON -->
+<!-- ══ UUS SESSIOON ══ -->
 <div class="screen" id="screen-new-session">
-  <div class="modal-header">
+  <div class="page-header">
     <div class="back-btn" id="btn-new-back">←</div>
-    <span class="modal-title">Uus inspektsioon</span>
+    <div><div class="page-title">Uus inspektsioon</div></div>
   </div>
-  <div class="modal-body">
+  <div class="form-body">
     <div>
-      <div class="field-label">Objekti nimi / asukoht</div>
-      <input class="field-input" id="session-name-input" type="text"
-        placeholder="nt. Pump nr.3, Ladu B, Katusekonstruktsioon..." autocomplete="off">
-      <div class="field-hint">Kirjelda lühidalt mis objekti inspekteerid. See ilmub raporti päisesse.</div>
+      <div class="field-label">Objekti / asukoha nimi</div>
+      <input class="field-input" id="sess-name-input" type="text" placeholder="nt. Pumpla nr.3, Ladu B, Hoone 7..." autocomplete="off">
+      <div class="field-hint">Kirjelda lühidalt inspekteeritavat kohta. See ilmub raporti päisesse.</div>
     </div>
   </div>
-  <div class="modal-actions">
-    <button class="btn-primary" id="btn-start-session">
-      <span>🔍</span><span>Alusta inspektsiooni</span>
-    </button>
+  <div class="form-actions">
+    <button class="btn-save" id="btn-create-session"><span>🔍</span><span>Alusta inspektsiooni</span></button>
   </div>
 </div>
 
-<!-- SESSIOON (kirjete vaade) -->
+<!-- ══ SESSIOON — objektide nimekiri ══ -->
 <div class="screen" id="screen-session">
-  <div class="session-header">
-    <div class="back-btn" id="btn-session-back">←</div>
-    <div class="session-header-info">
-      <div class="session-header-name" id="session-header-name">—</div>
-      <div class="session-header-meta" id="session-header-meta">—</div>
+  <div class="page-header">
+    <div class="back-btn" id="btn-sess-back">←</div>
+    <div style="flex:1;min-width:0">
+      <div class="page-title" id="sess-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+      <div class="page-subtitle" id="sess-meta">—</div>
     </div>
-    <div class="btn-icon" id="btn-session-report" title="Loo raport">📄</div>
-    <div class="btn-icon danger" id="btn-session-delete" title="Kustuta sessioon">🗑</div>
+    <div class="btn-icon" id="btn-sess-report" title="Raport">📄</div>
+    <div class="btn-icon danger" id="btn-sess-delete" title="Kustuta">🗑</div>
   </div>
-  <div class="kirjed-list" id="kirjed-list"></div>
-  <div class="session-nav">
-    <div class="nav-btn primary" id="btn-add-kirje">
-      <span>📸</span><span>Lisa kirje</span>
-    </div>
+  <div class="page-body" id="obj-list"></div>
+  <div class="page-nav">
+    <div class="nav-btn primary" id="btn-new-obj"><span>＋</span><span>Lisa objekt</span></div>
   </div>
 </div>
 
-<!-- KAAMERA -->
+<!-- ══ UUS OBJEKT ══ -->
+<div class="screen" id="screen-new-obj">
+  <div class="page-header">
+    <div class="back-btn" id="btn-obj-back">←</div>
+    <div><div class="page-title">Uus objekt</div></div>
+  </div>
+  <div class="form-body">
+    <div>
+      <div class="field-label">Seadme / asukoha nimetus</div>
+      <input class="field-input" id="obj-name-input" type="text" placeholder="nt. Pump 24, Mootor 5, Mahuti S4..." autocomplete="off">
+      <div class="field-hint">Sisesta inspekteeritava seadme või asukoha täpne nimetus.</div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn-save" id="btn-create-obj"><span>✓</span><span>Lisa objekt</span></button>
+  </div>
+</div>
+
+<!-- ══ OBJEKT — kirjete vaade ══ -->
+<div class="screen" id="screen-obj">
+  <div class="page-header">
+    <div class="back-btn" id="btn-obj-view-back">←</div>
+    <div style="flex:1;min-width:0">
+      <div class="page-title" id="obj-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+      <div class="page-subtitle" id="obj-meta">—</div>
+    </div>
+    <div class="btn-icon danger" id="btn-obj-delete" title="Kustuta objekt">🗑</div>
+  </div>
+  <div class="page-body" id="kirjed-list"></div>
+  <div class="page-nav">
+    <div class="nav-btn primary" id="btn-add-kirje"><span>📸</span><span>Lisa kirje</span></div>
+  </div>
+</div>
+
+<!-- ══ KAAMERA ══ -->
 <div class="screen" id="screen-camera">
   <video id="video-preview" autoplay playsinline muted></video>
   <div class="cam-overlay">
     <div class="cam-top">
-      <div class="cam-session-name" id="cam-session-label">—</div>
+      <div class="cam-label" id="cam-label">—</div>
       <div class="cam-close" id="btn-cam-close">✕</div>
     </div>
     <div class="cam-bottom">
@@ -553,21 +338,18 @@
   </div>
 </div>
 
-<!-- SALVESTA KIRJE -->
+<!-- ══ SALVESTA KIRJE ══ -->
 <div class="screen" id="screen-save">
-  <div class="save-header">
+  <div class="page-header">
     <div class="back-btn" id="btn-save-back">←</div>
-    <span class="save-title">Uus kirje</span>
+    <div><div class="page-title">Uus kirje</div><div class="page-subtitle" id="save-obj-label">—</div></div>
   </div>
   <div class="save-body">
     <img id="captured-img" src="" alt="">
     <div class="audio-box">
       <div class="audio-lbl">Häälkommentaar</div>
       <div class="audio-row">
-        <div class="rec-btn" id="btn-record">
-          <span class="rec-dot"></span>
-          <span id="rec-label">Alusta salvestust</span>
-        </div>
+        <div class="rec-btn" id="btn-record"><span class="rec-dot"></span><span id="rec-label">Alusta salvestust</span></div>
         <span class="rec-timer hidden" id="rec-timer">0:00</span>
         <div class="play-btn hidden" id="btn-play-rec">▶</div>
       </div>
@@ -579,77 +361,73 @@
   </div>
 </div>
 
-<!-- DETAIL -->
+<!-- ══ DETAIL ══ -->
 <div class="screen" id="screen-detail">
-  <div class="detail-header">
+  <div class="page-header">
     <div class="back-btn" id="btn-detail-back">←</div>
-    <span class="detail-time" id="detail-time"></span>
+    <span style="flex:1;font-size:11px;color:var(--text3);letter-spacing:.06em" id="detail-time"></span>
     <div class="btn-icon danger" id="btn-kirje-delete">🗑</div>
   </div>
-  <div class="detail-body">
-    <img id="detail-img" src="" alt="" class="hidden">
+  <div class="page-body">
+    <img id="detail-img" src="" alt="" class="hidden" style="width:100%;border-radius:var(--r);border:1px solid var(--border)">
     <div class="detail-audio hidden" id="detail-audio">
       <button class="detail-play" id="btn-detail-play">▶</button>
-      <div>
-        <div class="detail-audio-lbl">Häälkommentaar</div>
-        <div class="detail-audio-dur" id="detail-dur">—</div>
-      </div>
+      <div><div class="detail-audio-lbl">Häälkommentaar</div><div class="detail-audio-dur" id="detail-dur">—</div></div>
     </div>
   </div>
 </div>
 
-<!-- RAPORT KUVA -->
+<!-- ══ RAPORT ══ -->
 <div class="screen" id="screen-report">
-  <div class="report-header">
+  <div class="page-header">
     <div class="back-btn" id="btn-report-back">←</div>
-    <span class="report-title">Raport</span>
+    <div class="page-title" style="flex:1">Raport</div>
   </div>
-  <div class="report-body">
+  <div class="page-body">
     <div class="report-info-box">
-      <div class="report-row">
-        <span class="report-lbl">Objekt</span>
-        <span class="report-val" id="report-obj">—</span>
-      </div>
-      <div class="report-row">
-        <span class="report-lbl">Kuupäev</span>
-        <span class="report-val" id="report-date">—</span>
-      </div>
-      <div class="report-row">
-        <span class="report-lbl">Kirjeid</span>
-        <span class="report-val" id="report-count">—</span>
-      </div>
+      <div class="report-row"><span class="report-lbl">Objekt</span><span class="report-val" id="r-obj">—</span></div>
+      <div class="report-row"><span class="report-lbl">Kuupäev</span><span class="report-val" id="r-date">—</span></div>
+      <div class="report-row"><span class="report-lbl">Objekte</span><span class="report-val" id="r-objs">—</span></div>
+      <div class="report-row"><span class="report-lbl">Kirjeid kokku</span><span class="report-val" id="r-kirjed">—</span></div>
     </div>
     <div class="report-preview">
-      <div class="report-preview-header">Piltide eelvaade</div>
-      <div class="report-thumbs" id="report-thumbs"></div>
+      <div class="report-preview-hdr">Piltide eelvaade</div>
+      <div class="report-thumbs" id="r-thumbs"></div>
     </div>
   </div>
-  <div class="report-actions">
-    <button class="btn-primary orange" id="btn-generate-pdf">
-      <span>📄</span><span>Genereeri PDF</span>
-    </button>
+  <div class="page-nav">
+    <button class="nav-btn amber" id="btn-gen-pdf" style="flex:1"><span>📄</span><span>Genereeri PDF raport</span></button>
   </div>
 </div>
 
-<!-- DIALOOGID -->
-<div class="dialog-bg" id="dialog-del-session">
+<!-- Dialoogid -->
+<div class="dialog-bg" id="dlg-del-sess">
   <div class="dialog-box">
     <div class="dialog-title">Kustuta inspektsioon?</div>
-    <div class="dialog-body">Kõik kirjed, pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
+    <div class="dialog-body">Kõik objektid, pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
     <div class="dialog-actions">
-      <button class="dialog-btn danger" id="btn-confirm-del-session">Kustuta</button>
-      <button class="dialog-btn cancel" id="btn-cancel-del-session">Tühista</button>
+      <button class="dialog-btn danger" id="btn-ok-del-sess">Kustuta</button>
+      <button class="dialog-btn cancel" id="btn-no-del-sess">Tühista</button>
     </div>
   </div>
 </div>
-
-<div class="dialog-bg" id="dialog-del-kirje">
+<div class="dialog-bg" id="dlg-del-obj">
+  <div class="dialog-box">
+    <div class="dialog-title">Kustuta objekt?</div>
+    <div class="dialog-body">Kõik selle objekti kirjed, pildid ja häälkommentaarid kustutatakse.</div>
+    <div class="dialog-actions">
+      <button class="dialog-btn danger" id="btn-ok-del-obj">Kustuta</button>
+      <button class="dialog-btn cancel" id="btn-no-del-obj">Tühista</button>
+    </div>
+  </div>
+</div>
+<div class="dialog-bg" id="dlg-del-kirje">
   <div class="dialog-box">
     <div class="dialog-title">Kustuta kirje?</div>
     <div class="dialog-body">Pilt ja häälkommentaar kustutatakse jäädavalt.</div>
     <div class="dialog-actions">
-      <button class="dialog-btn danger" id="btn-confirm-del-kirje">Kustuta</button>
-      <button class="dialog-btn cancel" id="btn-cancel-del-kirje">Tühista</button>
+      <button class="dialog-btn danger" id="btn-ok-del-kirje">Kustuta</button>
+      <button class="dialog-btn cancel" id="btn-no-del-kirje">Tühista</button>
     </div>
   </div>
 </div>
@@ -660,7 +438,7 @@
 'use strict';
 
 // ── DB ──────────────────────────────────────────────────────
-const DB_NAME = 'InspektorX';
+const DB_NAME = 'InspektorX2';
 let db;
 
 function openDB() {
@@ -669,13 +447,17 @@ function openDB() {
     r.onupgradeneeded = e => {
       const d = e.target.result;
       if (!d.objectStoreNames.contains('sessioonid')) {
-        d.createObjectStore('sessioonid', { keyPath: 'id' })
-         .createIndex('aeg', 'aeg', { unique: false });
+        d.createObjectStore('sessioonid', { keyPath: 'id' }).createIndex('aeg','aeg',{unique:false});
+      }
+      if (!d.objectStoreNames.contains('objektid')) {
+        const os = d.createObjectStore('objektid', { keyPath: 'id' });
+        os.createIndex('sessId','sessId',{unique:false});
+        os.createIndex('aeg','aeg',{unique:false});
       }
       if (!d.objectStoreNames.contains('kirjed')) {
         const ks = d.createObjectStore('kirjed', { keyPath: 'id' });
-        ks.createIndex('sessId', 'sessId', { unique: false });
-        ks.createIndex('aeg', 'aeg', { unique: false });
+        ks.createIndex('objId','objId',{unique:false});
+        ks.createIndex('aeg','aeg',{unique:false});
       }
     };
     r.onsuccess = e => { db = e.target.result; res(); };
@@ -683,36 +465,52 @@ function openDB() {
   });
 }
 
-function dbAddSess(s) {
-  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readwrite'); tx.objectStore('sessioonid').add(s); tx.oncomplete=res; tx.onerror=rej; });
+function dbGet(store, index, val) {
+  return new Promise((res, rej) => {
+    if (val === null || val === undefined) { res([]); return; }
+    const t = db.transaction(store, 'readonly');
+    const r = t.objectStore(store).index(index).getAll(val);
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = rej;
+  });
 }
-function dbAllSess() {
-  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readonly'); const r=tx.objectStore('sessioonid').index('aeg').getAll(); r.onsuccess=e=>res(e.target.result.reverse()); r.onerror=rej; });
+function dbGetAll(store) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, 'readonly');
+    const r = t.objectStore(store).index('aeg').getAll();
+    r.onsuccess = e => res(e.target.result.reverse());
+    r.onerror = rej;
+  });
 }
-function dbDelSess(id) {
-  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readwrite'); tx.objectStore('sessioonid').delete(id); tx.oncomplete=res; tx.onerror=rej; });
+function dbAdd(store, item) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, 'readwrite');
+    t.objectStore(store).add(item);
+    t.oncomplete = res; t.onerror = rej;
+  });
 }
-function dbAddKirje(k) {
-  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readwrite'); tx.objectStore('kirjed').add(k); tx.oncomplete=res; tx.onerror=rej; });
+function dbDel(store, id) {
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, 'readwrite');
+    t.objectStore(store).delete(id);
+    t.oncomplete = res; t.onerror = rej;
+  });
 }
-function dbKirjedBySess(sessId) {
-  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readonly'); const r=tx.objectStore('kirjed').index('sessId').getAll(sessId); r.onsuccess=e=>res(e.target.result.sort((a,b)=>a.aeg-b.aeg)); r.onerror=rej; });
-}
-function dbDelKirje(id) {
-  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readwrite'); tx.objectStore('kirjed').delete(id); tx.oncomplete=res; tx.onerror=rej; });
-}
-function dbDelKirjedBySess(sessId) {
-  return new Promise(async (res,rej) => {
-    const kirjed = await dbKirjedBySess(sessId);
-    const tx = db.transaction('kirjed','readwrite');
-    kirjed.forEach(k => tx.objectStore('kirjed').delete(k.id));
-    tx.oncomplete=res; tx.onerror=rej;
+async function dbDelMany(store, ids) {
+  if (!ids || ids.length === 0) return;
+  return new Promise((res, rej) => {
+    const t = db.transaction(store, 'readwrite');
+    const s = t.objectStore(store);
+    ids.forEach(id => s.delete(id));
+    t.oncomplete = res; t.onerror = rej;
   });
 }
 
 // ── OLEK ────────────────────────────────────────────────────
 let activeSessId  = null;
+let activeObjId   = null;
 let activeKirjeId = null;
+let reportSessId  = null;
 let videoStream   = null;
 let facingMode    = 'environment';
 let capturedImg   = null;
@@ -723,101 +521,140 @@ let audioURL      = null;
 let recInterval   = null;
 let recSecs       = 0;
 let detailAudio   = null;
-let reportSessId  = null;
 
 // ── UI ──────────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
 }
-
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
 }
+function showDlg(id)  { document.getElementById(id).classList.add('show'); }
+function hideDlg(id)  { document.getElementById(id).classList.remove('show'); }
 
 // ── AVAKUVA ─────────────────────────────────────────────────
 async function refreshHome() {
-  try {
-    const all = await dbAllSess();
-    document.getElementById('home-count').textContent = all.length;
-    const list = document.getElementById('session-list');
+  const sessioonid = await dbGetAll('sessioonid');
+  document.getElementById('home-count').textContent = sessioonid.length;
 
-    if (all.length === 0) {
-      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div></div>';
-      return;
+  // Hoiatus kui üle 10 sessiooni
+  const warn = document.getElementById('warn-banner');
+  if (sessioonid.length >= 10) {
+    warn.textContent = '⚠ Sul on ' + sessioonid.length + ' sessiooni. Kustuta lõpetatud inspektsioonid et vabastada mäluruumi.';
+    warn.classList.remove('hidden');
+  } else {
+    warn.classList.add('hidden');
+  }
+
+  const list = document.getElementById('session-list');
+  if (sessioonid.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div></div>';
+    return;
+  }
+
+  const rows = await Promise.all(sessioonid.map(async s => {
+    const objs = await dbGet('objektid','sessId',s.id);
+    let kirjeCount = 0;
+    for (const o of objs) {
+      const k = await dbGet('kirjed','objId',o.id);
+      kirjeCount += k.length;
     }
+    return { s, objCount: objs.length, kirjeCount };
+  }));
 
-    // Kirjete arv sessioonide kaupa
-    const counts = {};
-    for (const s of all) {
-      const k = await dbKirjedBySess(s.id);
-      counts[s.id] = k.length;
-    }
-
-    list.innerHTML = all.map(s => {
-      const n = counts[s.id] || 0;
-      const isOpen = s.avatud;
-      return `<div class="session-card${isOpen?' active-session':''}" data-id="${s.id}">
-        <div class="session-status${isOpen?' open':''}"></div>
-        <div class="session-info">
-          <div class="session-name">${escHtml(s.nimi)}</div>
-          <div class="session-meta">${fmtFull(s.aeg)} · ${n} kirjet</div>
+  list.innerHTML = rows.map(({s, objCount, kirjeCount}) =>
+    `<div class="card" data-id="${s.id}">
+      <div class="card-inner">
+        <div class="status-dot"></div>
+        <div class="card-info">
+          <div class="card-name">${escHtml(s.nimi)}</div>
+          <div class="card-meta">${fmtFull(s.aeg)} · ${objCount} objekti · ${kirjeCount} kirjet</div>
         </div>
-        <div class="session-arrow">›</div>
-      </div>`;
-    }).join('');
+        <div class="card-arrow">›</div>
+      </div>
+    </div>`
+  ).join('');
 
-    list.querySelectorAll('.session-card').forEach(el =>
-      el.addEventListener('click', () => openSession(+el.dataset.id))
-    );
-  } catch(e) { console.error(e); }
-}
-
-// ── UUS SESSIOON ─────────────────────────────────────────────
-function startNewSession() {
-  document.getElementById('session-name-input').value = '';
-  show('new-session');
-  setTimeout(() => document.getElementById('session-name-input').focus(), 300);
-}
-
-async function createSession() {
-  const nimi = document.getElementById('session-name-input').value.trim();
-  if (!nimi) { toast('Sisesta objekti nimi'); return; }
-
-  const sess = { id: Date.now(), aeg: Date.now(), nimi, avatud: true };
-  await dbAddSess(sess);
-  await refreshHome();
-  openSession(sess.id);
+  list.querySelectorAll('.card').forEach(el =>
+    el.addEventListener('click', () => openSession(+el.dataset.id))
+  );
 }
 
 // ── SESSIOON ─────────────────────────────────────────────────
 async function openSession(id) {
   activeSessId = id;
-  const all  = await dbAllSess();
-  const sess = all.find(s => s.id === id);
-  if (!sess) return;
-
-  document.getElementById('session-header-name').textContent = sess.nimi;
-  document.getElementById('cam-session-label').textContent = sess.nimi;
-
-  await refreshKirjed();
+  await refreshSession();
   show('session');
 }
 
-async function refreshKirjed() {
-  const kirjed = await dbKirjedBySess(activeSessId);
-  const list   = document.getElementById('kirjed-list');
+async function refreshSession() {
+  const sessioonid = await dbGetAll('sessioonid');
+  const sess = sessioonid.find(s => s.id === activeSessId);
+  if (!sess) return;
 
-  const all    = await dbAllSess();
-  const sess   = all.find(s => s.id === activeSessId);
-  document.getElementById('session-header-meta').textContent =
-    fmtFull(sess ? sess.aeg : Date.now()) + ' · ' + kirjed.length + ' kirjet';
+  const objektid = await dbGet('objektid','sessId',activeSessId);
+  objektid.sort((a,b) => a.aeg - b.aeg);
 
+  document.getElementById('sess-title').textContent = sess.nimi;
+  document.getElementById('sess-meta').textContent  = fmtFull(sess.aeg) + ' · ' + objektid.length + ' objekti';
+
+  const list = document.getElementById('obj-list');
+  if (objektid.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">Objekte pole veel.<br>Vajuta "Lisa objekt" et alustada dokumenteerimist.</div></div>';
+    return;
+  }
+
+  const rows = await Promise.all(objektid.map(async (o, i) => {
+    const kirjed = await dbGet('kirjed','objId',o.id);
+    kirjed.sort((a,b) => a.aeg - b.aeg);
+    const thumbs = kirjed.slice(0,4).map(k =>
+      k.pilt ? `<img class="obj-thumb" src="${k.pilt}" alt="">` : `<div class="obj-thumb-empty">📷</div>`
+    ).join('');
+    const audioBadge = kirjed.some(k => k.heliSecs) ? `<span class="badge audio">🎙</span>` : '';
+    return `<div class="obj-card" data-id="${o.id}">
+      <div class="obj-card-header">
+        <div class="obj-nr">${i+1}</div>
+        <div class="obj-name">${escHtml(o.nimi)}</div>
+        <div class="obj-meta">${kirjed.length} kirjet ${audioBadge}</div>
+      </div>
+      ${kirjed.length > 0 ? `<div class="obj-thumbs">${thumbs}</div>` : ''}
+    </div>`;
+  }));
+
+  list.innerHTML = rows.join('');
+  list.querySelectorAll('.obj-card').forEach(el =>
+    el.addEventListener('click', () => openObj(+el.dataset.id))
+  );
+}
+
+// ── OBJEKT ───────────────────────────────────────────────────
+async function openObj(id) {
+  activeObjId = id;
+  await refreshObj();
+  show('obj');
+}
+
+async function refreshObj() {
+  if (!activeObjId) return;
+  const objektid = await dbGet('objektid','sessId',activeSessId);
+  const obj = objektid.find(o => o.id === activeObjId);
+  if (!obj) return;
+
+  const kirjed = await dbGet('kirjed','objId',activeObjId);
+  kirjed.sort((a,b) => a.aeg - b.aeg);
+
+  document.getElementById('obj-title').textContent = obj.nimi;
+  document.getElementById('obj-meta').textContent  = kirjed.length + ' kirjet';
+  document.getElementById('cam-label').textContent = obj.nimi;
+  document.getElementById('save-obj-label').textContent = obj.nimi;
+
+  const list = document.getElementById('kirjed-list');
   if (kirjed.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" dokumenteerimiseks.</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" et dokumenteerida.</div></div>';
     return;
   }
 
@@ -825,15 +662,11 @@ async function refreshKirjed() {
     const thumb = k.pilt
       ? `<img class="kirje-thumb" src="${k.pilt}" alt="">`
       : `<div class="kirje-thumb-empty">📷</div>`;
-    const audioBadge = k.heliSecs
-      ? `<span class="badge audio">🎙 ${fmtDur(k.heliSecs)}</span>` : '';
+    const ab = k.heliSecs ? `<span class="badge audio">🎙 ${fmtDur(k.heliSecs)}</span>` : '';
     return `<div class="kirje-card" data-id="${k.id}">
       <div class="kirje-num">${i+1}</div>
       ${thumb}
-      <div class="kirje-body">
-        <div class="kirje-time">${fmtTime(k.aeg)}</div>
-        <div class="kirje-badges">${audioBadge}</div>
-      </div>
+      <div class="kirje-body"><div class="kirje-time">${fmtTime(k.aeg)}</div><div class="kirje-badges">${ab}</div></div>
     </div>`;
   }).join('');
 
@@ -859,31 +692,21 @@ async function openCamera() {
     toast('Kaamera viga: ' + (e.message || e.name));
   }
 }
-
 function stopCamera() {
   if (!videoStream) return;
   videoStream.getTracks().forEach(t => t.stop());
   videoStream = null;
   document.getElementById('video-preview').srcObject = null;
 }
-
-async function flipCamera() {
-  facingMode = facingMode === 'environment' ? 'user' : 'environment';
-  await openCamera();
-}
-
 function takePicture() {
   const v = document.getElementById('video-preview');
-  const w = v.videoWidth || 640;
-  const h = v.videoHeight || 480;
+  const w = v.videoWidth||640, h = v.videoHeight||480;
   const c = document.createElement('canvas');
-  c.width = w; c.height = h;
-  c.getContext('2d').drawImage(v, 0, 0, w, h);
-
+  c.width=w; c.height=h;
+  c.getContext('2d').drawImage(v,0,0,w,h);
   const fl = document.getElementById('flash');
   fl.classList.add('on');
   setTimeout(() => fl.classList.remove('on'), 150);
-
   capturedImg = c.toDataURL('image/jpeg', 0.82);
   document.getElementById('captured-img').src = capturedImg;
   stopCamera();
@@ -904,7 +727,6 @@ function resetAudio() {
   document.getElementById('rec-timer').classList.add('hidden');
   document.getElementById('btn-play-rec').classList.add('hidden');
 }
-
 async function toggleRec() {
   if (recorder && recorder.state === 'recording') {
     recorder.stop();
@@ -918,12 +740,11 @@ async function toggleRec() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     audioChunks = [];
     let mime = '';
-    const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
-    for (const t of types) {
-      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) { mime = t; break; }
+    for (const t of ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']) {
+      if (MediaRecorder.isTypeSupported(t)) { mime = t; break; }
     }
     recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-    recorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+    recorder.ondataavailable = e => { if (e.data?.size > 0) audioChunks.push(e.data); };
     recorder.onstop = () => {
       stream.getTracks().forEach(t => t.stop());
       audioBlob = new Blob(audioChunks, { type: mime || 'audio/webm' });
@@ -938,14 +759,11 @@ async function toggleRec() {
     document.getElementById('rec-timer').textContent = '0:00';
     recInterval = setInterval(() => {
       recSecs++;
-      const m = Math.floor(recSecs/60), s = recSecs%60;
-      document.getElementById('rec-timer').textContent = m+':'+String(s).padStart(2,'0');
+      document.getElementById('rec-timer').textContent =
+        Math.floor(recSecs/60) + ':' + String(recSecs%60).padStart(2,'0');
     }, 1000);
-  } catch(e) {
-    toast('Mikrofon: ' + (e.message || e.name));
-  }
+  } catch(e) { toast('Mikrofon: ' + (e.message||e.name)); }
 }
-
 function playRec() {
   if (!audioURL) return;
   new Audio(audioURL).play().catch(() => toast('Taasesitus ebaõnnestus'));
@@ -954,275 +772,294 @@ function playRec() {
 // ── SALVESTA KIRJE ───────────────────────────────────────────
 async function saveKirje() {
   if (!capturedImg) { toast('Pilt puudub'); return; }
-
-  let heliData = null, heliSecs = 0, heliType = null;
+  let heliData=null, heliSecs=0, heliType=null;
   if (audioBlob) {
     heliData = await toB64(audioBlob);
     heliSecs = recSecs;
     heliType = audioBlob.type;
   }
-
-  const kirje = {
-    id: Date.now(), aeg: Date.now(),
-    sessId: activeSessId,
-    pilt: capturedImg,
-    heli: heliData, heliSecs, heliType
-  };
-
   try {
-    await dbAddKirje(kirje);
+    await dbAdd('kirjed', { id: Date.now(), aeg: Date.now(), objId: activeObjId, pilt: capturedImg, heli: heliData, heliSecs, heliType });
     capturedImg = null;
     resetAudio();
-    await refreshKirjed();
-    show('session');
+    await refreshObj();
+    show('obj');
     toast('Kirje lisatud ✓');
-  } catch(e) {
-    toast('Salvestamine ebaõnnestus');
-  }
+  } catch(e) { toast('Salvestamine ebaõnnestus'); }
 }
-
 function toB64(blob) {
-  return new Promise((res,rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.onerror = rej;
-    r.readAsDataURL(blob);
-  });
+  return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(blob); });
 }
 
 // ── DETAIL ──────────────────────────────────────────────────
 async function openDetail(id) {
-  const kirjed = await dbKirjedBySess(activeSessId);
-  const kirje  = kirjed.find(k => k.id === id);
-  if (!kirje) return;
+  const kirjed = await dbGet('kirjed','objId',activeObjId);
+  const k = kirjed.find(x => x.id === id);
+  if (!k) return;
   activeKirjeId = id;
-
-  document.getElementById('detail-time').textContent = fmtFull(kirje.aeg);
-
+  document.getElementById('detail-time').textContent = fmtFull(k.aeg);
   const img = document.getElementById('detail-img');
-  if (kirje.pilt) { img.src = kirje.pilt; img.classList.remove('hidden'); }
-  else            { img.classList.add('hidden'); }
-
+  if (k.pilt) { img.src=k.pilt; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
   const abox = document.getElementById('detail-audio');
-  if (kirje.heli) {
+  if (k.heli) {
     abox.classList.remove('hidden');
-    document.getElementById('detail-dur').textContent = fmtDur(kirje.heliSecs);
-    if (detailAudio) { detailAudio.pause(); detailAudio = null; }
-    const blob = b64Blob(kirje.heli, kirje.heliType || 'audio/webm');
-    detailAudio = new Audio(URL.createObjectURL(blob));
-  } else {
-    abox.classList.add('hidden');
-    detailAudio = null;
-  }
+    document.getElementById('detail-dur').textContent = fmtDur(k.heliSecs);
+    if (detailAudio) { detailAudio.pause(); detailAudio=null; }
+    detailAudio = new Audio(URL.createObjectURL(b64Blob(k.heli, k.heliType||'audio/webm')));
+  } else { abox.classList.add('hidden'); detailAudio=null; }
   show('detail');
 }
-
 function b64Blob(b64, type) {
-  const bin = atob(b64.split(',')[1]);
-  const arr = new Uint8Array(bin.length);
-  for (let i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type });
+  const bin=atob(b64.split(',')[1]), arr=new Uint8Array(bin.length);
+  for (let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type});
 }
 
 // ── KUSTUTAMINE ─────────────────────────────────────────────
-function showDelSession()  { document.getElementById('dialog-del-session').classList.add('show'); }
-function hideDelSession()  { document.getElementById('dialog-del-session').classList.remove('show'); }
-function showDelKirje()    { document.getElementById('dialog-del-kirje').classList.add('show'); }
-function hideDelKirje()    { document.getElementById('dialog-del-kirje').classList.remove('show'); }
-
-async function doDelSession() {
-  await dbDelKirjedBySess(activeSessId);
-  await dbDelSess(activeSessId);
-  hideDelSession();
+async function doDelSess() {
+  const objs = await dbGet('objektid','sessId',activeSessId);
+  for (const o of objs) {
+    const ks = await dbGet('kirjed','objId',o.id);
+    await dbDelMany('kirjed', ks.map(k=>k.id));
+  }
+  await dbDelMany('objektid', objs.map(o=>o.id));
+  await dbDel('sessioonid', activeSessId);
+  hideDlg('dlg-del-sess');
   activeSessId = null;
   await refreshHome();
   show('home');
   toast('Inspektsioon kustutatud');
 }
-
-async function doDelKirje() {
-  await dbDelKirje(activeKirjeId);
-  if (detailAudio) { detailAudio.pause(); detailAudio = null; }
-  hideDelKirje();
-  await refreshKirjed();
+async function doDelObj() {
+  const ks = await dbGet('kirjed','objId',activeObjId);
+  await dbDelMany('kirjed', ks.map(k=>k.id));
+  await dbDel('objektid', activeObjId);
+  hideDlg('dlg-del-obj');
+  activeObjId = null;
+  await refreshSession();
   show('session');
+  toast('Objekt kustutatud');
+}
+async function doDelKirje() {
+  await dbDel('kirjed', activeKirjeId);
+  if (detailAudio) { detailAudio.pause(); detailAudio=null; }
+  hideDlg('dlg-del-kirje');
+  await refreshObj();
+  show('obj');
   toast('Kirje kustutatud');
 }
 
 // ── RAPORT ──────────────────────────────────────────────────
-async function openReport(sessId) {
-  reportSessId = sessId || activeSessId;
-  const all    = await dbAllSess();
-  const sess   = all.find(s => s.id === reportSessId);
-  const kirjed = await dbKirjedBySess(reportSessId);
+async function openReport() {
+  reportSessId = activeSessId;
+  const sessioonid = await dbGetAll('sessioonid');
+  const sess = sessioonid.find(s => s.id === reportSessId);
+  const objs = await dbGet('objektid','sessId',reportSessId);
+  objs.sort((a,b) => a.aeg-b.aeg);
 
-  document.getElementById('report-obj').textContent   = sess ? sess.nimi : '—';
-  document.getElementById('report-date').textContent  = sess ? fmtFull(sess.aeg) : '—';
-  document.getElementById('report-count').textContent = kirjed.length + ' kirjet';
-
-  const thumbsEl = document.getElementById('report-thumbs');
-  if (kirjed.length === 0) {
-    thumbsEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px">Kirjeid pole</div>';
-  } else {
-    thumbsEl.innerHTML = kirjed.map(k =>
-      k.pilt
-        ? `<img class="report-thumb" src="${k.pilt}" alt="">`
-        : `<div class="report-thumb-empty">📷</div>`
-    ).join('');
+  let totalKirjed = 0;
+  const allPildid = [];
+  for (const o of objs) {
+    const ks = await dbGet('kirjed','objId',o.id);
+    totalKirjed += ks.length;
+    ks.sort((a,b)=>a.aeg-b.aeg);
+    ks.forEach(k => { if (k.pilt) allPildid.push(k.pilt); });
   }
+
+  document.getElementById('r-obj').textContent    = sess ? sess.nimi : '—';
+  document.getElementById('r-date').textContent   = sess ? fmtFull(sess.aeg) : '—';
+  document.getElementById('r-objs').textContent   = objs.length + ' objekti';
+  document.getElementById('r-kirjed').textContent = totalKirjed + ' kirjet';
+
+  const thumbs = document.getElementById('r-thumbs');
+  thumbs.innerHTML = allPildid.slice(0,8).map(p =>
+    `<img class="report-thumb" src="${p}" alt="">`
+  ).join('') || '<div style="padding:12px;color:var(--text3);font-size:11px">Pilte pole</div>';
+
   show('report');
 }
 
 async function generatePDF() {
-  const all    = await dbAllSess();
-  const sess   = all.find(s => s.id === reportSessId);
-  const kirjed = await dbKirjedBySess(reportSessId);
+  const sessioonid = await dbGetAll('sessioonid');
+  const sess = sessioonid.find(s => s.id === reportSessId);
+  const objs = await dbGet('objektid','sessId',reportSessId);
+  objs.sort((a,b) => a.aeg-b.aeg);
 
-  if (kirjed.length === 0) { toast('Kirjeid pole — raportit ei saa luua'); return; }
+  let totalKirjed = 0;
+  const objData = [];
+  for (const o of objs) {
+    const ks = await dbGet('kirjed','objId',o.id);
+    ks.sort((a,b)=>a.aeg-b.aeg);
+    totalKirjed += ks.length;
+    objData.push({ obj: o, kirjed: ks });
+  }
 
+  if (totalKirjed === 0) { toast('Kirjeid pole — raportit ei saa luua'); return; }
   toast('Genereerin PDF...');
 
-  const sessNimi = sess ? sess.nimi : 'Inspektsioon';
-  const kuupaev  = sess ? fmtFull(sess.aeg) : fmtFull(Date.now());
+  const objHTML = objData.map((od, oi) => {
+    const kirjedHTML = od.kirjed.map((k, ki) => `
+      <div class="kirje">
+        <div class="kirje-hdr"><span class="knr">Kirje ${ki+1}</span><span class="kaeg">${fmtFull(k.aeg)}</span>${k.heliSecs?`<span class="kheli">🎙 ${fmtDur(k.heliSecs)}</span>`:''}</div>
+        ${k.pilt ? `<img class="kpilt" src="${k.pilt}">` : '<div class="kpuudub">Pilt puudub</div>'}
+      </div>`).join('');
+    return `<div class="obj-blokk">
+      <div class="obj-hdr"><span class="onr">${oi+1}</span><span class="onimi">${escHtml(od.obj.nimi)}</span><span class="oknt">${od.kirjed.length} kirjet</span></div>
+      ${kirjedHTML}
+    </div>`;
+  }).join('');
 
-  // Ehita HTML raport mälus ja prindi
-  let kirjedHTML = kirjed.map((k, i) => `
-    <div class="kirje-blokk">
-      <div class="kirje-header">
-        <span class="kirje-nr">Kirje ${i+1}</span>
-        <span class="kirje-aeg">${fmtFull(k.aeg)}</span>
-        ${k.heliSecs ? `<span class="kirje-heli">🎙 ${fmtDur(k.heliSecs)}</span>` : ''}
-      </div>
-      ${k.pilt ? `<img class="kirje-pilt" src="${k.pilt}">` : '<div class="kirje-pilt-puudub">Pilt puudub</div>'}
-    </div>
-  `).join('');
-
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<title>Inspektor X — ${sessNimi}</title>
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Inspektor X — ${escHtml(sess?.nimi||'Inspektsioon')}</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 24px; }
-  .raport-header { border-bottom: 3px solid #0d4f8a; padding-bottom: 16px; margin-bottom: 24px; }
-  .raport-pealkiri { font-size: 24px; font-weight: 800; color: #0d4f8a; letter-spacing: .04em; }
-  .raport-meta { margin-top: 8px; font-size: 13px; color: #555; }
-  .raport-meta span { margin-right: 20px; }
-  .kirje-blokk { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
-  .kirje-header { background: #f0f4f8; padding: 10px 14px; display: flex; gap: 16px; align-items: center; border-bottom: 1px solid #ddd; }
-  .kirje-nr { font-weight: 800; font-size: 13px; color: #0d4f8a; }
-  .kirje-aeg { font-size: 12px; color: #666; flex: 1; }
-  .kirje-heli { font-size: 12px; color: #0d8a6a; }
-  .kirje-pilt { width: 100%; max-height: 400px; object-fit: contain; display: block; background: #f8f8f8; }
-  .kirje-pilt-puudub { padding: 40px; text-align: center; color: #999; font-size: 14px; background: #f8f8f8; }
-  .raport-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center; }
-  @media print {
-    body { padding: 0; }
-    .kirje-blokk { page-break-inside: avoid; }
-  }
-</style>
-</head><body>
-<div class="raport-header">
-  <div class="raport-pealkiri">INSPEKTOR X — Inspektsiooniakt</div>
-  <div class="raport-meta">
-    <span><strong>Objekt:</strong> ${escHtml(sessNimi)}</span>
-    <span><strong>Kuupäev:</strong> ${kuupaev}</span>
-    <span><strong>Kirjeid:</strong> ${kirjed.length}</span>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;color:#1a1a2e;background:#fff;padding:20px;font-size:13px}
+.rpt-hdr{border-bottom:3px solid #0d4f8a;padding-bottom:14px;margin-bottom:20px}
+.rpt-title{font-size:22px;font-weight:800;color:#0d4f8a;letter-spacing:.03em}
+.rpt-sub{margin-top:6px;color:#555;font-size:12px}
+.rpt-sub span{margin-right:18px}
+.obj-blokk{margin-bottom:24px;border:1px solid #ccc;border-radius:6px;overflow:hidden;page-break-inside:avoid}
+.obj-hdr{background:#e8f0f8;padding:8px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ccc}
+.onr{width:24px;height:24px;border-radius:50%;background:#0d4f8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.onimi{font-weight:800;font-size:14px;color:#0d4f8a;flex:1}
+.oknt{font-size:11px;color:#666}
+.kirje{border-bottom:1px solid #eee;page-break-inside:avoid}
+.kirje:last-child{border-bottom:none}
+.kirje-hdr{padding:7px 14px;background:#f8f8f8;display:flex;gap:14px;align-items:center;border-bottom:1px solid #eee}
+.knr{font-weight:700;color:#333;font-size:12px}
+.kaeg{font-size:11px;color:#777;flex:1}
+.kheli{font-size:11px;color:#0d8a6a}
+.kpilt{width:100%;max-height:380px;object-fit:contain;display:block;background:#f5f5f5}
+.kpuudub{padding:32px;text-align:center;color:#aaa;font-size:13px;background:#f5f5f5}
+.rpt-ftr{margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center}
+@media print{body{padding:0}.obj-blokk{page-break-inside:avoid}}
+</style></head><body>
+<div class="rpt-hdr">
+  <div class="rpt-title">INSPEKTOR X — Inspektsiooniakt</div>
+  <div class="rpt-sub">
+    <span><b>Objekt:</b> ${escHtml(sess?.nimi||'—')}</span>
+    <span><b>Kuupäev:</b> ${fmtFull(sess?.aeg||Date.now())}</span>
+    <span><b>Objekte:</b> ${objs.length}</span>
+    <span><b>Kirjeid:</b> ${totalKirjed}</span>
   </div>
 </div>
-${kirjedHTML}
-<div class="raport-footer">Genereeritud Inspektor X rakendusega · ${fmtFull(Date.now())}</div>
+${objHTML}
+<div class="rpt-ftr">Genereeritud Inspektor X rakendusega · ${fmtFull(Date.now())}</div>
 </body></html>`;
 
-  // Ava print dialoog
-  const win = window.open('', '_blank');
+  const win = window.open('','_blank');
   if (!win) { toast('Luba hüpikaknad brauseris'); return; }
   win.document.write(html);
   win.document.close();
-  win.onload = () => {
-    setTimeout(() => {
-      win.print();
-    }, 500);
-  };
+  win.onload = () => setTimeout(() => win.print(), 500);
 }
 
 // ── ABIFUNKTSIOONID ──────────────────────────────────────────
 function fmtTime(ts) {
-  const d = Date.now() - ts;
-  if (d < 60e3)    return 'Äsja';
-  if (d < 3600e3)  return Math.floor(d/60e3)  + ' min tagasi';
-  if (d < 86400e3) return Math.floor(d/3600e3) + ' h tagasi';
-  return new Date(ts).toLocaleDateString('et-EE', { day:'numeric', month:'short' });
+  const d=Date.now()-ts;
+  if(d<60e3) return 'Äsja';
+  if(d<3600e3) return Math.floor(d/60e3)+' min tagasi';
+  if(d<86400e3) return Math.floor(d/3600e3)+' h tagasi';
+  return new Date(ts).toLocaleDateString('et-EE',{day:'numeric',month:'short'});
 }
 function fmtFull(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString('et-EE', { day:'numeric', month:'long', year:'numeric' })
-       + ' · ' + d.toLocaleTimeString('et-EE', { hour:'2-digit', minute:'2-digit' });
+  const d=new Date(ts);
+  return d.toLocaleDateString('et-EE',{day:'numeric',month:'long',year:'numeric'})
+    +' · '+d.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'});
 }
-function fmtDur(s) {
-  if (!s) return '0:00';
-  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
-}
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function fmtDur(s) { if(!s) return '0:00'; return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── SÜNDMUSED ────────────────────────────────────────────────
-
 // Avakuva
-document.getElementById('btn-new-session').addEventListener('click', startNewSession);
+document.getElementById('btn-new-session').addEventListener('click', () => {
+  document.getElementById('sess-name-input').value = '';
+  show('new-session');
+  setTimeout(() => document.getElementById('sess-name-input').focus(), 300);
+});
 document.getElementById('btn-close').addEventListener('click', () => window.close());
 
 // Uus sessioon
 document.getElementById('btn-new-back').addEventListener('click', () => show('home'));
-document.getElementById('btn-start-session').addEventListener('click', createSession);
-document.getElementById('session-name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') createSession();
+document.getElementById('btn-create-session').addEventListener('click', async () => {
+  const nimi = document.getElementById('sess-name-input').value.trim();
+  if (!nimi) { toast('Sisesta objekti nimi'); return; }
+  const sess = { id: Date.now(), aeg: Date.now(), nimi };
+  await dbAdd('sessioonid', sess);
+  await refreshHome();
+  activeSessId = sess.id;
+  await refreshSession();
+  show('session');
+});
+document.getElementById('sess-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-create-session').click();
 });
 
 // Sessioon
-document.getElementById('btn-session-back').addEventListener('click', () => { activeSessId = null; refreshHome(); show('home'); });
+document.getElementById('btn-sess-back').addEventListener('click', () => { refreshHome(); show('home'); });
+document.getElementById('btn-new-obj').addEventListener('click', () => {
+  document.getElementById('obj-name-input').value = '';
+  show('new-obj');
+  setTimeout(() => document.getElementById('obj-name-input').focus(), 300);
+});
+document.getElementById('btn-sess-report').addEventListener('click', openReport);
+document.getElementById('btn-sess-delete').addEventListener('click', () => showDlg('dlg-del-sess'));
+
+// Uus objekt
+document.getElementById('btn-obj-back').addEventListener('click', () => show('session'));
+document.getElementById('btn-create-obj').addEventListener('click', async () => {
+  const nimi = document.getElementById('obj-name-input').value.trim();
+  if (!nimi) { toast('Sisesta objekti nimetus'); return; }
+  const obj = { id: Date.now(), aeg: Date.now(), sessId: activeSessId, nimi };
+  await dbAdd('objektid', obj);
+  activeObjId = obj.id;
+  await refreshObj();
+  show('obj');
+});
+document.getElementById('obj-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-create-obj').click();
+});
+
+// Objekt vaade
+document.getElementById('btn-obj-view-back').addEventListener('click', () => { refreshSession(); show('session'); });
 document.getElementById('btn-add-kirje').addEventListener('click', openCamera);
-document.getElementById('btn-session-report').addEventListener('click', () => openReport(activeSessId));
-document.getElementById('btn-session-delete').addEventListener('click', showDelSession);
+document.getElementById('btn-obj-delete').addEventListener('click', () => showDlg('dlg-del-obj'));
 
 // Kaamera
-document.getElementById('btn-cam-close').addEventListener('click', () => { stopCamera(); show('session'); });
+document.getElementById('btn-cam-close').addEventListener('click', () => { stopCamera(); show('obj'); });
 document.getElementById('btn-shutter').addEventListener('click', takePicture);
-document.getElementById('btn-flip').addEventListener('click', flipCamera);
+document.getElementById('btn-flip').addEventListener('click', async () => { facingMode = facingMode==='environment'?'user':'environment'; await openCamera(); });
 
 // Salvesta
-document.getElementById('btn-save-back').addEventListener('click', () => { resetAudio(); capturedImg = null; show('session'); });
+document.getElementById('btn-save-back').addEventListener('click', () => { resetAudio(); capturedImg=null; show('obj'); });
 document.getElementById('btn-record').addEventListener('click', toggleRec);
 document.getElementById('btn-play-rec').addEventListener('click', playRec);
 document.getElementById('btn-save-kirje').addEventListener('click', saveKirje);
-document.getElementById('btn-discard').addEventListener('click', () => { resetAudio(); capturedImg = null; show('session'); });
+document.getElementById('btn-discard').addEventListener('click', () => { resetAudio(); capturedImg=null; show('obj'); });
 
 // Detail
-document.getElementById('btn-detail-back').addEventListener('click', () => { if (detailAudio) detailAudio.pause(); show('session'); });
+document.getElementById('btn-detail-back').addEventListener('click', () => { if(detailAudio) detailAudio.pause(); show('obj'); });
 document.getElementById('btn-detail-play').addEventListener('click', () => {
   if (!detailAudio) return;
-  detailAudio.currentTime = 0;
+  detailAudio.currentTime=0;
   detailAudio.play().catch(() => toast('Taasesitus ebaõnnestus'));
 });
-document.getElementById('btn-kirje-delete').addEventListener('click', showDelKirje);
+document.getElementById('btn-kirje-delete').addEventListener('click', () => showDlg('dlg-del-kirje'));
 
 // Raport
 document.getElementById('btn-report-back').addEventListener('click', () => show('session'));
-document.getElementById('btn-generate-pdf').addEventListener('click', generatePDF);
+document.getElementById('btn-gen-pdf').addEventListener('click', generatePDF);
 
-// Dialoogid — sessioon
-document.getElementById('btn-confirm-del-session').addEventListener('click', doDelSession);
-document.getElementById('btn-cancel-del-session').addEventListener('click', hideDelSession);
-document.getElementById('dialog-del-session').addEventListener('click', e => {
-  if (e.target === document.getElementById('dialog-del-session')) hideDelSession();
-});
-
-// Dialoogid — kirje
-document.getElementById('btn-confirm-del-kirje').addEventListener('click', doDelKirje);
-document.getElementById('btn-cancel-del-kirje').addEventListener('click', hideDelKirje);
-document.getElementById('dialog-del-kirje').addEventListener('click', e => {
-  if (e.target === document.getElementById('dialog-del-kirje')) hideDelKirje();
-});
+// Dialoogid
+document.getElementById('btn-ok-del-sess').addEventListener('click', doDelSess);
+document.getElementById('btn-no-del-sess').addEventListener('click', () => hideDlg('dlg-del-sess'));
+document.getElementById('dlg-del-sess').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-sess')) hideDlg('dlg-del-sess'); });
+document.getElementById('btn-ok-del-obj').addEventListener('click', doDelObj);
+document.getElementById('btn-no-del-obj').addEventListener('click', () => hideDlg('dlg-del-obj'));
+document.getElementById('dlg-del-obj').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-obj')) hideDlg('dlg-del-obj'); });
+document.getElementById('btn-ok-del-kirje').addEventListener('click', doDelKirje);
+document.getElementById('btn-no-del-kirje').addEventListener('click', () => hideDlg('dlg-del-kirje'));
+document.getElementById('dlg-del-kirje').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-kirje')) hideDlg('dlg-del-kirje'); });
 
 // ── KÄIVITUS ─────────────────────────────────────────────────
 openDB().then(refreshHome).catch(() => toast('Andmebaasi viga'));
