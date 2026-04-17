@@ -47,8 +47,8 @@
     display:flex; align-items:center; justify-content:center;
     font-size:16px; cursor:pointer; flex-shrink:0;
   }
-  .page-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; flex:1; }
-  .page-title.accent { color:var(--accent); }
+  .page-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; flex:1; color:var(--accent2); }
+  .page-title.accent { color:var(--accent2); }
   .page-subtitle { font-size:10px; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-top:1px; }
 
   .btn-icon {
@@ -95,8 +95,8 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
 
   .card-info { flex:1; min-width:0; }
-  .card-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .card-meta { font-size:10px; color:var(--text3); margin-top:3px; letter-spacing:.04em; }
+  .card-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .card-meta { font-size:10px; color:var(--accent2); opacity:.7; margin-top:3px; letter-spacing:.04em; }
   .card-arrow { font-size:18px; color:var(--text3); }
 
   /* Objekt kaart — erinev */
@@ -113,7 +113,7 @@
     font-family:'Syne',sans-serif; font-size:11px; font-weight:800; color:var(--text3);
     flex-shrink:0;
   }
-  .obj-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--text); flex:1; }
+  .obj-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--accent2); flex:1; }
   .obj-meta { font-size:10px; color:var(--text3); }
   .obj-thumbs { display:flex; gap:4px; padding:0 14px 10px; overflow-x:auto; }
   .obj-thumb { width:56px; height:56px; border-radius:6px; object-fit:cover; flex-shrink:0; border:1px solid var(--border); }
@@ -130,7 +130,7 @@
   .kirje-thumb { width:64px; min-height:64px; flex-shrink:0; object-fit:cover; display:block; }
   .kirje-thumb-empty { width:64px; min-height:64px; flex-shrink:0; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:18px; }
   .kirje-body { flex:1; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
-  .kirje-time { font-size:10px; color:var(--text3); }
+  .kirje-time { font-size:10px; color:var(--accent2); opacity:.8; }
   .kirje-badges { display:flex; gap:5px; }
   .badge { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg2); color:var(--text3); }
   .badge.audio { color:var(--accent); }
@@ -201,7 +201,7 @@
   /* ── RAPORT ── */
   .report-info-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:10px; }
   .report-row { display:flex; justify-content:space-between; align-items:center; }
-  .report-lbl { font-size:11px; color:var(--text3); }
+  .report-lbl { font-size:11px; color:var(--accent2); opacity:.8; }
   .report-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
   .report-preview { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
   .report-preview-hdr { padding:10px 14px; background:var(--bg3); font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
@@ -241,7 +241,7 @@
       <div class="page-subtitle">Visuaalne kontroll</div>
     </div>
     <div style="text-align:right">
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800" id="home-count">0</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent2)" id="home-count">0</div>
       <div style="font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">sessiooni</div>
     </div>
   </div>
@@ -361,11 +361,25 @@
   </div>
 </div>
 
+<!-- ══ PÄRAST SALVESTAMIST — valikukuva ══ -->
+<div class="screen" id="screen-after-save">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px">
+    <div style="font-size:48px">✓</div>
+    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent2)" id="after-save-label">Pilt salvestatud</div>
+    <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6" id="after-save-sub">—</div>
+  </div>
+  <div class="page-nav" style="flex-direction:column;gap:10px">
+    <div class="nav-btn primary" id="btn-after-jatka"><span>📸</span><span>Jätka — lisa veel üks pilt</span></div>
+    <div class="nav-btn" id="btn-after-uus"><span>＋</span><span>Uus kirje</span></div>
+    <div class="nav-btn amber" id="btn-after-lopeta"><span>📄</span><span>Lõpeta inspektsioon</span></div>
+  </div>
+</div>
+
 <!-- ══ DETAIL ══ -->
 <div class="screen" id="screen-detail">
   <div class="page-header">
     <div class="back-btn" id="btn-detail-back">←</div>
-    <span style="flex:1;font-size:11px;color:var(--text3);letter-spacing:.06em" id="detail-time"></span>
+    <span style="flex:1;font-size:11px;color:var(--accent2);opacity:.8;letter-spacing:.06em" id="detail-time"></span>
     <div class="btn-icon danger" id="btn-kirje-delete">🗑</div>
   </div>
   <div class="page-body">
@@ -783,8 +797,13 @@ async function saveKirje() {
     capturedImg = null;
     resetAudio();
     await refreshObj();
-    show('obj');
-    toast('Kirje lisatud ✓');
+    // Näita valikukuva
+    const objektid = await dbGet('objektid','sessId',activeSessId);
+    const obj = objektid.find(o => o.id === activeObjId);
+    const kirjed = await dbGet('kirjed','objId',activeObjId);
+    document.getElementById('after-save-label').textContent = obj ? obj.nimi : 'Pilt salvestatud';
+    document.getElementById('after-save-sub').textContent = kirjed.length + ' pilti salvestatud';
+    show('after-save');
   } catch(e) { toast('Salvestamine ebaõnnestus'); }
 }
 function toB64(blob) {
@@ -1048,6 +1067,15 @@ document.getElementById('btn-kirje-delete').addEventListener('click', () => show
 
 // Raport
 document.getElementById('btn-report-back').addEventListener('click', () => show('session'));
+
+// Pärast salvestamist
+document.getElementById('btn-after-jatka').addEventListener('click', () => openCamera());
+document.getElementById('btn-after-uus').addEventListener('click', () => {
+  document.getElementById('obj-name-input').value = '';
+  show('new-obj');
+  setTimeout(() => document.getElementById('obj-name-input').focus(), 300);
+});
+document.getElementById('btn-after-lopeta').addEventListener('click', () => openReport());
 document.getElementById('btn-gen-pdf').addEventListener('click', generatePDF);
 
 // Dialoogid
