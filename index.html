@@ -387,7 +387,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:'
     </div>
   </div>
   <div class="pg-nav">
-    <button class="btn amber" id="btn-pdf" style="flex:1"><span>📄</span><span>Genereeri PDF</span></button>
+    <button class="btn amber" id="btn-pdf" style="flex:1"><span>📄</span><span>Genereeri raport</span></button>
   </div>
 </div>
 
@@ -429,7 +429,7 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:'
 'use strict';
 
 // ── DB ───────────────────────────────────────────────────────
-const DB_NAME = 'InspektorX3';
+const DB_NAME = 'InspektorX4';
 let db;
 
 function openDB() {
@@ -511,6 +511,7 @@ let audioURL    = null;
 let recTimer    = null;
 let recSecs     = 0;
 let detAudio    = null;
+let detAudioUrl = null;
 
 // ── UI ───────────────────────────────────────────────────────
 function show(id) {
@@ -596,8 +597,11 @@ async function loadSess() {
   const rows = await Promise.all(kirjed.map(async (k, i) => {
     const pildid = await dbGetBy('pildid','kirjeId',k.id);
     pildid.sort((a,b) => a.aeg - b.aeg);
-    const thumbs = pildid.slice(0,4).map(p =>
-      p.pilt ? `<img class="k-thumb" src="${p.pilt}">` : `<div class="k-thumb-e">📷</div>`
+    const thumbUrls = pildid.slice(0,4).map(p =>
+      p.pilt ? URL.createObjectURL(p.pilt) : null
+    );
+    const thumbs = thumbUrls.map(u =>
+      u ? `<img class="k-thumb" src="${u}">` : `<div class="k-thumb-e">📷</div>`
     ).join('');
     const hasAudio = pildid.some(p => p.heliSecs);
     return `<div class="kirje-card" data-id="${k.id}">
@@ -642,9 +646,11 @@ async function loadKirje() {
     return;
   }
 
+  // Loo ajutised URL-id Blob-idest, vabasta pärast render
+  const piltUrls = pildid.map(p => p.pilt ? URL.createObjectURL(p.pilt) : null);
   list.innerHTML = pildid.map((p, i) => {
-    const thumb = p.pilt
-      ? `<img class="pilt-img" src="${p.pilt}">`
+    const thumb = piltUrls[i]
+      ? `<img class="pilt-img" src="${piltUrls[i]}">`
       : `<div class="pilt-img-e">📷</div>`;
     const ab = p.heliSecs ? `<span class="badge">🎙 ${fmtDur(p.heliSecs)}</span>` : '';
     return `<div class="pilt-card" data-id="${p.id}">
@@ -656,6 +662,8 @@ async function loadKirje() {
       </div>
     </div>`;
   }).join('');
+  // Vabasta URL-id pärast DOM render
+  setTimeout(() => piltUrls.forEach(u => u && URL.revokeObjectURL(u)), 1000);
 
   list.querySelectorAll('.pilt-card').forEach(el =>
     el.addEventListener('click', () => openDetail(+el.dataset.id))
@@ -758,18 +766,18 @@ function playRec() {
 // ── SALVESTA PILT ────────────────────────────────────────────
 async function savePilt() {
   if (!capImg) { toast('Pilt puudub'); return; }
-  let heliData = null, heliSecs = 0, heliType = null;
-  if (audioBlob) {
-    heliData = await toB64(audioBlob);
-    heliSecs = recSecs;
-    heliType = audioBlob.type;
-  }
+
+  // Canvas dataURL → Blob (ei base64 string)
+  const piltBlob = await fetch(capImg).then(r => r.blob());
+
   try {
     await dbAdd('pildid', {
       id: Date.now(), aeg: Date.now(),
       kirjeId: curKirjeId,
-      pilt: capImg,
-      heli: heliData, heliSecs, heliType
+      pilt: piltBlob,                          // Blob, mitte string
+      heliBlob: audioBlob || null,             // Blob, mitte string
+      heliSecs: audioBlob ? recSecs : 0,
+      heliType: audioBlob ? audioBlob.type : null
     });
     capImg = null;
     resetAudio();
@@ -784,14 +792,6 @@ async function savePilt() {
     show('after');
   } catch(e) { toast('Salvestamine ebaõnnestus'); }
 }
-function toB64(blob) {
-  return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = e => res(e.target.result);
-    r.onerror = rej;
-    r.readAsDataURL(blob);
-  });
-}
 
 // ── DETAIL ───────────────────────────────────────────────────
 async function openDetail(id) {
@@ -802,26 +802,29 @@ async function openDetail(id) {
 
   document.getElementById('det-time').textContent = fmtFull(p.aeg);
   const img = document.getElementById('det-img');
-  if (p.pilt) { img.src = p.pilt; img.classList.remove('hidden'); }
-  else        { img.classList.add('hidden'); }
+  if (p.pilt) {
+    const piltUrl = URL.createObjectURL(p.pilt);
+    img.src = piltUrl;
+    img.classList.remove('hidden');
+    img.onload = () => URL.revokeObjectURL(piltUrl);
+  } else {
+    img.classList.add('hidden');
+  }
 
   const abox = document.getElementById('det-audio');
-  if (p.heli) {
+  if (detAudio) { detAudio.pause(); detAudio = null; }
+  if (detAudioUrl) { URL.revokeObjectURL(detAudioUrl); detAudioUrl = null; }
+
+  if (p.heliBlob) {
     abox.classList.remove('hidden');
     document.getElementById('det-dur').textContent = fmtDur(p.heliSecs);
-    if (detAudio) { detAudio.pause(); detAudio = null; }
-    detAudio = new Audio(URL.createObjectURL(b64Blob(p.heli, p.heliType || 'audio/webm')));
+    detAudioUrl = URL.createObjectURL(p.heliBlob);
+    detAudio = new Audio(detAudioUrl);
   } else {
     abox.classList.add('hidden');
     detAudio = null;
   }
   show('detail');
-}
-function b64Blob(b64, type) {
-  const bin = atob(b64.split(',')[1]);
-  const arr = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type });
 }
 
 // ── KUSTUTAMINE ──────────────────────────────────────────────
@@ -866,20 +869,23 @@ async function openRpt() {
   kirjed.sort((a,b) => a.aeg - b.aeg);
 
   let totalPildid = 0;
-  const allThumbs = [];
+  const allPildidBlob = [];
   for (const k of kirjed) {
     const p = await dbGetBy('pildid','kirjeId',k.id);
     totalPildid += p.length;
-    p.forEach(x => { if (x.pilt) allThumbs.push(x.pilt); });
+    p.forEach(x => { if (x.pilt) allPildidBlob.push(x.pilt); });
   }
 
   document.getElementById('r-obj').textContent    = s ? s.nimi : '—';
   document.getElementById('r-date').textContent   = s ? fmtFull(s.aeg) : '—';
   document.getElementById('r-kirjed').textContent = kirjed.length + ' kirjet';
   document.getElementById('r-pildid').textContent = totalPildid + ' pilti';
-  document.getElementById('r-thumbs').innerHTML   = allThumbs.slice(0,8).map(src =>
-    `<img class="r-thumb" src="${src}">`
-  ).join('') || '<div style="padding:12px;color:var(--text3);font-size:11px">Pilte pole</div>';
+
+  const thumbUrls = allPildidBlob.slice(0,8).map(b => URL.createObjectURL(b));
+  document.getElementById('r-thumbs').innerHTML = thumbUrls.length
+    ? thumbUrls.map(u => `<img class="r-thumb" src="${u}">`).join('')
+    : '<div style="padding:12px;color:var(--text3);font-size:11px">Pilte pole</div>';
+  setTimeout(() => thumbUrls.forEach(u => URL.revokeObjectURL(u)), 2000);
 
   show('rpt');
 }
@@ -900,18 +906,44 @@ async function genPDF() {
   }
 
   if (!totalPildid) { toast('Pilte pole — raportit ei saa luua'); return; }
-  toast('Genereerin PDF...');
+  toast('Genereerin raportit...');
+
+  // Konverdi Blob-id base64-ks raporti jaoks
+  async function blobToDataUrl(blob) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = e => res(e.target.result);
+      r.onerror = rej;
+      r.readAsDataURL(blob);
+    });
+  }
+  // Preprocess: konverdi kõik Blob-id
+  for (const kd of kirjeData) {
+    for (const p of kd.pildid) {
+      if (p.pilt instanceof Blob) p._piltB64 = await blobToDataUrl(p.pilt);
+      if (p.heliBlob instanceof Blob) p._heliB64 = await blobToDataUrl(p.heliBlob);
+    }
+  }
 
   const kirjedeHTML = kirjeData.map((kd, ki) => {
-    const pildiHTML = kd.pildid.map((p, pi) => `
-      <div class="pblokk">
+    const pildiHTML = kd.pildid.map((p, pi) => {
+      const audioTag = p._heliB64
+        ? `<div class="paudio">
+            <audio controls preload="auto" style="width:100%;margin-top:8px">
+              <source src="${p._heliB64}" type="${p.heliType||'audio/webm'}">
+            </audio>
+            <div class="paudio-lbl">🎙 Häälkommentaar · ${fmtDur(p.heliSecs)}</div>
+          </div>`
+        : '';
+      return `<div class="pblokk">
         <div class="phdr">
           <span class="pnr">Pilt ${pi+1}</span>
           <span class="paeg">${fmtFull(p.aeg)}</span>
-          ${p.heliSecs ? `<span class="pheli">🎙 ${fmtDur(p.heliSecs)}</span>` : ''}
         </div>
-        ${p.pilt ? `<img class="ppilt" src="${p.pilt}">` : '<div class="ppole">Pilt puudub</div>'}
-      </div>`).join('');
+        ${p._piltB64 ? `<img class="ppilt" src="${p._piltB64}">` : '<div class="ppole">Pilt puudub</div>'}
+        ${audioTag}
+      </div>`;
+    }).join('');
     return `<div class="kblokk">
       <div class="khdr"><span class="knr">${ki+1}</span><span class="knimi">${esc(kd.k.nimi)}</span><span class="kcnt">${kd.pildid.length} pilti</span></div>
       ${pildiHTML}
@@ -919,29 +951,31 @@ async function genPDF() {
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inspektor X — ${esc(s?.nimi||'Inspektsioon')}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;color:#1a1a2e;padding:20px;font-size:13px}
+body{font-family:Arial,sans-serif;color:#1a1a2e;padding:20px;font-size:13px;max-width:800px;margin:0 auto}
 .rhdr{border-bottom:3px solid #0d4f8a;padding-bottom:14px;margin-bottom:20px}
 .rtitle{font-size:22px;font-weight:800;color:#0d4f8a}
 .rsub{margin-top:6px;color:#555;font-size:12px}
 .rsub span{margin-right:16px}
-.kblokk{margin-bottom:24px;border:1px solid #ccc;border-radius:6px;overflow:hidden;page-break-inside:avoid}
+.kblokk{margin-bottom:24px;border:1px solid #ccc;border-radius:6px;overflow:hidden}
 .khdr{background:#e8f0f8;padding:8px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ccc}
 .knr{width:24px;height:24px;border-radius:50%;background:#0d4f8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
 .knimi{font-weight:800;font-size:14px;color:#0d4f8a;flex:1}
 .kcnt{font-size:11px;color:#666}
-.pblokk{border-bottom:1px solid #eee;page-break-inside:avoid}
+.pblokk{border-bottom:1px solid #eee}
 .pblokk:last-child{border-bottom:none}
 .phdr{padding:7px 14px;background:#f8f8f8;display:flex;gap:14px;align-items:center;border-bottom:1px solid #eee}
 .pnr{font-weight:700;color:#333;font-size:12px}
 .paeg{font-size:11px;color:#777;flex:1}
-.pheli{font-size:11px;color:#0d8a6a}
-.ppilt{width:100%;max-height:380px;object-fit:contain;display:block;background:#f5f5f5}
+.ppilt{width:100%;max-height:420px;object-fit:contain;display:block;background:#f5f5f5}
 .ppole{padding:32px;text-align:center;color:#aaa;font-size:13px;background:#f5f5f5}
+.paudio{padding:10px 14px;background:#f0f8f4;border-top:1px solid #e0ede8}
+.paudio-lbl{font-size:11px;color:#0d8a6a;margin-bottom:6px;font-weight:700}
+audio{border-radius:4px}
 .rftr{margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center}
-@media print{body{padding:0}.kblokk{page-break-inside:avoid}}
 </style></head><body>
 <div class="rhdr">
   <div class="rtitle">INSPEKTOR X — Inspektsiooniakt</div>
@@ -953,14 +987,19 @@ body{font-family:Arial,sans-serif;color:#1a1a2e;padding:20px;font-size:13px}
   </div>
 </div>
 ${kirjedeHTML}
-<div class="rftr">Genereeritud Inspektor X · ${fmtFull(Date.now())}</div>
+<div class="rftr">Genereeritud Inspektor X rakendusega · ${fmtFull(Date.now())}</div>
 </body></html>`;
 
-  const win = window.open('', '_blank');
-  if (!win) { toast('Luba hüpikaknad brauseris'); return; }
-  win.document.write(html);
-  win.document.close();
-  win.onload = () => setTimeout(() => win.print(), 500);
+  // Salvesta HTML failina
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const kuupaev = new Date().toISOString().slice(0,10);
+  a.href     = url;
+  a.download = `inspektor-x_${esc(s?.nimi||'raport').replace(/[^a-z0-9]/gi,'_')}_${kuupaev}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Raport salvestatud ✓');
 }
 
 // ── ABIFUNKTSIOONID ──────────────────────────────────────────
