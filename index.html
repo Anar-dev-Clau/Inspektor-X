@@ -284,7 +284,7 @@
   </div>
   <div class="page-body" id="obj-list"></div>
   <div class="page-nav">
-    <div class="nav-btn primary" id="btn-new-obj"><span>＋</span><span>Lisa objekt</span></div>
+    <div class="nav-btn primary" id="btn-new-obj"><span>＋</span><span>Lisa kirje</span></div>
   </div>
 </div>
 
@@ -292,7 +292,7 @@
 <div class="screen" id="screen-new-obj">
   <div class="page-header">
     <div class="back-btn" id="btn-obj-back">←</div>
-    <div><div class="page-title">Uus objekt</div></div>
+    <div><div class="page-title">Uus kirje</div></div>
   </div>
   <div class="form-body">
     <div>
@@ -302,7 +302,7 @@
     </div>
   </div>
   <div class="form-actions">
-    <button class="btn-save" id="btn-create-obj"><span>✓</span><span>Lisa objekt</span></button>
+    <button class="btn-save" id="btn-create-obj"><span>✓</span><span>Lisa kirje</span></button>
   </div>
 </div>
 
@@ -318,7 +318,7 @@
   </div>
   <div class="page-body" id="kirjed-list"></div>
   <div class="page-nav">
-    <div class="nav-btn primary" id="btn-add-kirje"><span>📸</span><span>Lisa kirje</span></div>
+    <div class="nav-btn primary" id="btn-add-kirje"><span>📸</span><span>Lisa pilt</span></div>
   </div>
 </div>
 
@@ -342,7 +342,7 @@
 <div class="screen" id="screen-save">
   <div class="page-header">
     <div class="back-btn" id="btn-save-back">←</div>
-    <div><div class="page-title">Uus kirje</div><div class="page-subtitle" id="save-obj-label">—</div></div>
+    <div><div class="page-title">Uus pilt</div><div class="page-subtitle" id="save-obj-label">—</div></div>
   </div>
   <div class="save-body">
     <img id="captured-img" src="" alt="">
@@ -356,7 +356,7 @@
     </div>
   </div>
   <div class="save-actions">
-    <button class="btn-save" id="btn-save-kirje"><span>✓</span><span>Lisa kirje</span></button>
+    <button class="btn-save" id="btn-save-kirje"><span>✓</span><span>Lisa pilt</span></button>
     <div class="btn-discard" id="btn-discard">🗑</div>
   </div>
 </div>
@@ -387,8 +387,8 @@
     <div class="report-info-box">
       <div class="report-row"><span class="report-lbl">Objekt</span><span class="report-val" id="r-obj">—</span></div>
       <div class="report-row"><span class="report-lbl">Kuupäev</span><span class="report-val" id="r-date">—</span></div>
-      <div class="report-row"><span class="report-lbl">Objekte</span><span class="report-val" id="r-objs">—</span></div>
-      <div class="report-row"><span class="report-lbl">Kirjeid kokku</span><span class="report-val" id="r-kirjed">—</span></div>
+      <div class="report-row"><span class="report-lbl">Kirjeid</span><span class="report-val" id="r-objs">—</span></div>
+      <div class="report-row"><span class="report-lbl">Pilte kokku</span><span class="report-val" id="r-kirjed">—</span></div>
     </div>
     <div class="report-preview">
       <div class="report-preview-hdr">Piltide eelvaade</div>
@@ -413,8 +413,8 @@
 </div>
 <div class="dialog-bg" id="dlg-del-obj">
   <div class="dialog-box">
-    <div class="dialog-title">Kustuta objekt?</div>
-    <div class="dialog-body">Kõik selle objekti kirjed, pildid ja häälkommentaarid kustutatakse.</div>
+    <div class="dialog-title">Kustuta kirje?</div>
+    <div class="dialog-body">Kõik selle kirje pildid ja häälkommentaarid kustutatakse.</div>
     <div class="dialog-actions">
       <button class="dialog-btn danger" id="btn-ok-del-obj">Kustuta</button>
       <button class="dialog-btn cancel" id="btn-no-del-obj">Tühista</button>
@@ -572,7 +572,7 @@ async function refreshHome() {
         <div class="status-dot"></div>
         <div class="card-info">
           <div class="card-name">${escHtml(s.nimi)}</div>
-          <div class="card-meta">${fmtFull(s.aeg)} · ${objCount} objekti · ${kirjeCount} kirjet</div>
+          <div class="card-meta">${fmtFull(s.aeg)} · ${objCount} kirjet · ${kirjeCount} pilti</div>
         </div>
         <div class="card-arrow">›</div>
       </div>
@@ -604,7 +604,7 @@ async function refreshSession() {
 
   const list = document.getElementById('obj-list');
   if (objektid.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">Objekte pole veel.<br>Vajuta "Lisa objekt" et alustada dokumenteerimist.</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" et alustada dokumenteerimist.</div></div>';
     return;
   }
 
@@ -619,7 +619,7 @@ async function refreshSession() {
       <div class="obj-card-header">
         <div class="obj-nr">${i+1}</div>
         <div class="obj-name">${escHtml(o.nimi)}</div>
-        <div class="obj-meta">${kirjed.length} kirjet ${audioBadge}</div>
+        <div class="obj-meta">${kirjed.length} pilti ${audioBadge}</div>
       </div>
       ${kirjed.length > 0 ? `<div class="obj-thumbs">${thumbs}</div>` : ''}
     </div>`;
@@ -648,13 +648,13 @@ async function refreshObj() {
   kirjed.sort((a,b) => a.aeg - b.aeg);
 
   document.getElementById('obj-title').textContent = obj.nimi;
-  document.getElementById('obj-meta').textContent  = kirjed.length + ' kirjet';
+  document.getElementById('obj-meta').textContent  = kirjed.length + ' pilti';
   document.getElementById('cam-label').textContent = obj.nimi;
   document.getElementById('save-obj-label').textContent = obj.nimi;
 
   const list = document.getElementById('kirjed-list');
   if (kirjed.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" et dokumenteerida.</div></div>';
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Pilte pole veel.<br>Vajuta "Lisa pilt" et dokumenteerida.</div></div>';
     return;
   }
 
@@ -838,7 +838,7 @@ async function doDelObj() {
   activeObjId = null;
   await refreshSession();
   show('session');
-  toast('Objekt kustutatud');
+  toast('Kirje kustutatud');
 }
 async function doDelKirje() {
   await dbDel('kirjed', activeKirjeId);
@@ -904,7 +904,7 @@ async function generatePDF() {
         ${k.pilt ? `<img class="kpilt" src="${k.pilt}">` : '<div class="kpuudub">Pilt puudub</div>'}
       </div>`).join('');
     return `<div class="obj-blokk">
-      <div class="obj-hdr"><span class="onr">${oi+1}</span><span class="onimi">${escHtml(od.obj.nimi)}</span><span class="oknt">${od.kirjed.length} kirjet</span></div>
+      <div class="obj-hdr"><span class="onr">${oi+1}</span><span class="onimi">${escHtml(od.obj.nimi)}</span><span class="oknt">${od.kirjed.length} pilti</span></div>
       ${kirjedHTML}
     </div>`;
   }).join('');
@@ -939,7 +939,7 @@ body{font-family:Arial,sans-serif;color:#1a1a2e;background:#fff;padding:20px;fon
   <div class="rpt-sub">
     <span><b>Objekt:</b> ${escHtml(sess?.nimi||'—')}</span>
     <span><b>Kuupäev:</b> ${fmtFull(sess?.aeg||Date.now())}</span>
-    <span><b>Objekte:</b> ${objs.length}</span>
+    <span><b>Kirjeid:</b> ${objs.length}</span>
     <span><b>Kirjeid:</b> ${totalKirjed}</span>
   </div>
 </div>
@@ -1005,7 +1005,7 @@ document.getElementById('btn-new-obj').addEventListener('click', () => {
 document.getElementById('btn-sess-report').addEventListener('click', openReport);
 document.getElementById('btn-sess-delete').addEventListener('click', () => showDlg('dlg-del-sess'));
 
-// Uus objekt
+// Uus pilt
 document.getElementById('btn-obj-back').addEventListener('click', () => show('session'));
 document.getElementById('btn-create-obj').addEventListener('click', async () => {
   const nimi = document.getElementById('obj-name-input').value.trim();
