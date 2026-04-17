@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inspektor X">
+<meta name="theme-color" content="#0d1f2d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Inspektor X</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg:      #0d1f2d;
+    --bg2:     #112233;
+    --bg3:     #163044;
+    --surface: #1a3a52;
+    --border:  #254d6b;
+    --accent:  #00c2a8;
+    --accent2: #f0a500;
+    --text:    #e8f4f8;
+    --text2:   #8aafc0;
+    --text3:   #4a6e82;
+    --red:     #ff5a5a;
+    --green:   #00c2a8;
+    --r:       14px;
+    --rsm:     8px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .screen.active { opacity: 1; pointer-events: all; }
+
+  /* ── AVAKUVA ── */
+  #screen-home {
+    background: var(--bg);
+    justify-content: space-between;
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+  }
+  .home-header {
+    padding: 24px 24px 0;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .app-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  .app-sub { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; margin-top: 2px; }
+
+  .session-count {
+    text-align: right;
+  }
+  .session-count .num { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text); }
+  .session-count .lbl { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; }
+
+  .home-body {
+    flex: 1; overflow-y: auto; padding: 16px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* Sessioonid nimekirjas */
+  .session-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .session-card:active { border-color: var(--accent); }
+  .session-card.active-session { border-color: var(--accent); }
+
+  .session-status {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text3); flex-shrink: 0;
+  }
+  .session-status.open { background: var(--accent); animation: blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .session-info { flex: 1; min-width: 0; }
+  .session-name {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .session-meta { font-size: 10px; color: var(--text3); margin-top: 3px; letter-spacing: .04em; }
+
+  .session-arrow { font-size: 16px; color: var(--text3); }
+
+  .empty-state {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; color: var(--text3); padding: 48px; text-align: center;
+  }
+  .empty-icon { font-size: 44px; opacity: .3; }
+  .empty-text { font-size: 13px; line-height: 1.6; }
+
+  .home-nav { padding: 0 24px 12px; display: flex; gap: 10px; }
+  .nav-btn {
+    flex: 1; height: 52px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text2); transition: all .15s;
+  }
+  .nav-btn:active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
+  .nav-btn.primary {
+    background: var(--accent); border-color: var(--accent); color: #0d1f2d;
+  }
+  .nav-btn.primary:active { opacity: .85; transform: scale(.97); }
+  .nav-btn.icon-only { flex: 0; width: 52px; }
+
+  /* ── UUS SESSIOON ── */
+  #screen-new-session {
+    background: var(--bg);
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+  }
+  .modal-header {
+    padding: 20px 24px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .back-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; flex-shrink: 0;
+  }
+  .modal-title {
+    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+  }
+  .modal-body { flex: 1; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+
+  .field-label {
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 8px;
+  }
+  .field-input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px 16px;
+    color: var(--text); font-family: 'DM Mono', monospace; font-size: 15px;
+    outline: none; caret-color: var(--accent);
+    transition: border-color .15s;
+  }
+  .field-input:focus { border-color: var(--accent); }
+  .field-input::placeholder { color: var(--text3); }
+
+  .field-hint { font-size: 11px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+
+  .modal-actions { padding: 16px 24px; }
+  .btn-primary {
+    width: 100%; height: 54px; border-radius: var(--r);
+    background: var(--accent); border: none; color: #0d1f2d;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .btn-primary:active { transform: scale(.97); opacity: .9; }
+  .btn-primary.orange { background: var(--accent2); }
+
+  /* ── SESSIOON (kirjete vaade) ── */
+  #screen-session {
+    background: var(--bg);
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+    display: flex; flex-direction: column;
+  }
+  .session-header {
+    padding: 16px 24px 12px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .session-header-info { flex: 1; min-width: 0; }
+  .session-header-name {
+    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+    color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .session-header-meta { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: .04em; }
+
+  .btn-icon {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer; transition: all .15s;
+  }
+  .btn-icon:active { border-color: var(--accent); color: var(--accent); }
+  .btn-icon.danger:active { border-color: var(--red); color: var(--red); }
+
+  .kirjed-list {
+    flex: 1; overflow-y: auto; padding: 0 24px 12px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .kirje-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); overflow: hidden; cursor: pointer;
+    display: flex; align-items: stretch; min-height: 72px; transition: border-color .15s;
+  }
+  .kirje-card:active { border-color: var(--accent2); }
+  .kirje-num {
+    width: 36px; background: var(--bg3); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--text3);
+    font-family: 'Syne', sans-serif;
+  }
+  .kirje-thumb { width: 72px; min-height: 72px; flex-shrink: 0; object-fit: cover; display: block; }
+  .kirje-thumb-empty {
+    width: 72px; min-height: 72px; flex-shrink: 0;
+    background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .kirje-body { flex: 1; padding: 10px 12px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+  .kirje-time { font-size: 10px; color: var(--text3); letter-spacing: .04em; }
+  .kirje-badges { display: flex; gap: 6px; }
+  .badge {
+    font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    background: var(--bg3); color: var(--text3);
+  }
+  .badge.audio { color: var(--accent); }
+
+  .session-nav { padding: 8px 24px 0; display: flex; gap: 10px; }
+
+  /* ── KAAMERA ── */
+  #screen-camera { background: #000; position: relative; }
+  #video-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+  }
+  .cam-top { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .cam-session-name {
+    font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+    color: rgba(255,255,255,.8); letter-spacing: .06em;
+    background: rgba(0,0,0,.4); padding: 6px 12px; border-radius: 20px;
+    max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .cam-close {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; color: #fff;
+  }
+  .cam-bottom {
+    padding: 0 24px 32px;
+    display: flex; align-items: center; justify-content: center; gap: 40px;
+  }
+  .shutter-btn {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #fff; border: 4px solid rgba(255,255,255,.4);
+    cursor: pointer; transition: transform .1s;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.5);
+  }
+  .shutter-btn:active { transform: scale(.9); }
+  .flip-btn {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer; color: #fff;
+  }
+  .flash {
+    position: fixed; inset: 0; background: #fff;
+    opacity: 0; pointer-events: none; z-index: 999; transition: opacity .05s;
+  }
+  .flash.on { opacity: 1; }
+
+  /* ── SALVESTA KIRJE ── */
+  #screen-save {
+    background: var(--bg);
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+  }
+  .save-header { padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+  .save-title {
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text2);
+  }
+  .save-body {
+    flex: 1; overflow-y: auto; padding: 0 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  #captured-img {
+    width: 100%; border-radius: var(--r); max-height: 280px;
+    object-fit: cover; border: 1px solid var(--border); display: block;
+  }
+  .audio-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .audio-lbl { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: var(--text3); }
+  .audio-row { display: flex; align-items: center; gap: 10px; }
+  .rec-btn {
+    flex: 1; height: 44px; border-radius: var(--rsm);
+    background: var(--bg3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; font-family: 'Syne', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--text2); transition: all .15s;
+  }
+  .rec-btn.recording {
+    background: rgba(255,90,90,.12); border-color: var(--red); color: var(--red);
+    animation: pulse 1.5s ease infinite;
+  }
+  .rec-btn.done { border-color: var(--accent); color: var(--accent); }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,90,90,.3); }
+    50%      { box-shadow: 0 0 0 6px rgba(255,90,90,0); }
+  }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .rec-btn.recording .rec-dot { animation: bdot 1s step-end infinite; }
+  @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0} }
+  .rec-timer { font-size: 11px; color: var(--red); letter-spacing: .1em; min-width: 38px; text-align: center; }
+  .play-btn {
+    width: 44px; height: 44px; border-radius: var(--rsm);
+    background: var(--bg3); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; cursor: pointer; color: var(--text2); transition: all .15s;
+  }
+  .play-btn:active { border-color: var(--accent); color: var(--accent); }
+  .hidden { display: none !important; }
+  .save-actions { padding: 14px 24px; display: flex; gap: 10px; }
+  .btn-save {
+    flex: 1; height: 52px; border-radius: var(--r);
+    background: var(--accent); border: none; color: #0d1f2d;
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
+    cursor: pointer; transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-save:active { transform: scale(.97); opacity: .9; }
+  .btn-discard {
+    width: 52px; height: 52px; border-radius: var(--r);
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer; color: var(--text3); transition: all .15s;
+  }
+  .btn-discard:active { border-color: var(--red); color: var(--red); }
+
+  /* ── DETAIL ── */
+  #screen-detail {
+    background: var(--bg);
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+    display: flex; flex-direction: column;
+  }
+  .detail-header { padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .detail-time { font-size: 11px; color: var(--text3); letter-spacing: .06em; }
+  .detail-body {
+    flex: 1; overflow-y: auto; padding: 0 24px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  #detail-img { width: 100%; border-radius: var(--r); border: 1px solid var(--border); display: block; }
+  .detail-audio {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .detail-play {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--accent); border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; cursor: pointer; flex-shrink: 0; transition: opacity .15s; color: #0d1f2d;
+  }
+  .detail-play:active { opacity: .8; }
+  .detail-audio-lbl { font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase; }
+  .detail-audio-dur { font-size: 14px; color: var(--text); margin-top: 3px; }
+
+  /* ── RAPORT KUVA ── */
+  #screen-report {
+    background: var(--bg);
+    padding: env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0;
+    display: flex; flex-direction: column;
+  }
+  .report-header { padding: 16px 24px 12px; display: flex; align-items: center; gap: 12px; }
+  .report-title {
+    font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 800;
+    letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+    flex: 1;
+  }
+  .report-body { flex: 1; overflow-y: auto; padding: 0 24px; display: flex; flex-direction: column; gap: 14px; }
+
+  .report-info-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .report-row { display: flex; justify-content: space-between; align-items: center; }
+  .report-lbl { font-size: 11px; color: var(--text3); letter-spacing: .06em; }
+  .report-val { font-size: 13px; color: var(--text); font-family: 'Syne', sans-serif; font-weight: 700; }
+
+  .report-preview {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--r); overflow: hidden;
+  }
+  .report-preview-header {
+    padding: 10px 14px; background: var(--bg3);
+    font-size: 10px; color: var(--text3); letter-spacing: .1em; text-transform: uppercase;
+  }
+  .report-thumbs {
+    padding: 12px; display: grid; grid-template-columns: repeat(3,1fr); gap: 6px;
+  }
+  .report-thumb {
+    aspect-ratio: 1; border-radius: 6px; object-fit: cover;
+    border: 1px solid var(--border); display: block; width: 100%;
+  }
+  .report-thumb-empty {
+    aspect-ratio: 1; border-radius: 6px;
+    background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 20px;
+    border: 1px solid var(--border);
+  }
+  .report-actions { padding: 14px 24px; display: flex; flex-direction: column; gap: 10px; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom,20px) + 90px);
+    left: 50%; transform: translateX(-50%) translateY(16px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--rsm); padding: 10px 20px;
+    font-size: 12px; letter-spacing: .04em;
+    opacity: 0; transition: all .22s ease;
+    pointer-events: none; white-space: nowrap; z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ── DIALOG ── */
+  .dialog-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    z-index: 500; display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .dialog-bg.show { opacity: 1; pointer-events: all; }
+  .dialog-box {
+    width: 100%; background: var(--bg2);
+    border-top: 1px solid var(--border); border-radius: 20px 20px 0 0;
+    padding: 24px 24px calc(env(safe-area-inset-bottom,20px) + 24px);
+    transform: translateY(100%); transition: transform .25s ease;
+  }
+  .dialog-bg.show .dialog-box { transform: translateY(0); }
+  .dialog-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .dialog-body { font-size: 13px; color: var(--text2); margin-bottom: 20px; line-height: 1.5; }
+  .dialog-actions { display: flex; flex-direction: column; gap: 10px; }
+  .dialog-btn {
+    width: 100%; height: 50px; border-radius: var(--r); border: 1px solid var(--border);
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: all .15s;
+  }
+  .dialog-btn.danger { background: rgba(255,90,90,.12); border-color: var(--red); color: var(--red); }
+  .dialog-btn.cancel { background: var(--surface); color: var(--text2); }
+
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="flash" id="flash"></div>
+
+<!-- AVAKUVA -->
+<div class="screen active" id="screen-home">
+  <div class="home-header">
+    <div>
+      <div class="app-title">Inspektor X</div>
+      <div class="app-sub">Visuaalne kontroll</div>
+    </div>
+    <div class="session-count">
+      <div class="num" id="home-count">0</div>
+      <div class="lbl">sessiooni</div>
+    </div>
+  </div>
+  <div class="home-body" id="session-list">
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div>
+    </div>
+  </div>
+  <div class="home-nav">
+    <div class="nav-btn primary" id="btn-new-session">
+      <span>＋</span><span>Uus inspektsioon</span>
+    </div>
+    <div class="nav-btn icon-only" id="btn-close">✕</div>
+  </div>
+</div>
+
+<!-- UUS SESSIOON -->
+<div class="screen" id="screen-new-session">
+  <div class="modal-header">
+    <div class="back-btn" id="btn-new-back">←</div>
+    <span class="modal-title">Uus inspektsioon</span>
+  </div>
+  <div class="modal-body">
+    <div>
+      <div class="field-label">Objekti nimi / asukoht</div>
+      <input class="field-input" id="session-name-input" type="text"
+        placeholder="nt. Pump nr.3, Ladu B, Katusekonstruktsioon..." autocomplete="off">
+      <div class="field-hint">Kirjelda lühidalt mis objekti inspekteerid. See ilmub raporti päisesse.</div>
+    </div>
+  </div>
+  <div class="modal-actions">
+    <button class="btn-primary" id="btn-start-session">
+      <span>🔍</span><span>Alusta inspektsiooni</span>
+    </button>
+  </div>
+</div>
+
+<!-- SESSIOON (kirjete vaade) -->
+<div class="screen" id="screen-session">
+  <div class="session-header">
+    <div class="back-btn" id="btn-session-back">←</div>
+    <div class="session-header-info">
+      <div class="session-header-name" id="session-header-name">—</div>
+      <div class="session-header-meta" id="session-header-meta">—</div>
+    </div>
+    <div class="btn-icon" id="btn-session-report" title="Loo raport">📄</div>
+    <div class="btn-icon danger" id="btn-session-delete" title="Kustuta sessioon">🗑</div>
+  </div>
+  <div class="kirjed-list" id="kirjed-list"></div>
+  <div class="session-nav">
+    <div class="nav-btn primary" id="btn-add-kirje">
+      <span>📸</span><span>Lisa kirje</span>
+    </div>
+  </div>
+</div>
+
+<!-- KAAMERA -->
+<div class="screen" id="screen-camera">
+  <video id="video-preview" autoplay playsinline muted></video>
+  <div class="cam-overlay">
+    <div class="cam-top">
+      <div class="cam-session-name" id="cam-session-label">—</div>
+      <div class="cam-close" id="btn-cam-close">✕</div>
+    </div>
+    <div class="cam-bottom">
+      <div class="flip-btn" id="btn-flip">🔄</div>
+      <div class="shutter-btn" id="btn-shutter"></div>
+      <div style="width:48px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SALVESTA KIRJE -->
+<div class="screen" id="screen-save">
+  <div class="save-header">
+    <div class="back-btn" id="btn-save-back">←</div>
+    <span class="save-title">Uus kirje</span>
+  </div>
+  <div class="save-body">
+    <img id="captured-img" src="" alt="">
+    <div class="audio-box">
+      <div class="audio-lbl">Häälkommentaar</div>
+      <div class="audio-row">
+        <div class="rec-btn" id="btn-record">
+          <span class="rec-dot"></span>
+          <span id="rec-label">Alusta salvestust</span>
+        </div>
+        <span class="rec-timer hidden" id="rec-timer">0:00</span>
+        <div class="play-btn hidden" id="btn-play-rec">▶</div>
+      </div>
+    </div>
+  </div>
+  <div class="save-actions">
+    <button class="btn-save" id="btn-save-kirje"><span>✓</span><span>Lisa kirje</span></button>
+    <div class="btn-discard" id="btn-discard">🗑</div>
+  </div>
+</div>
+
+<!-- DETAIL -->
+<div class="screen" id="screen-detail">
+  <div class="detail-header">
+    <div class="back-btn" id="btn-detail-back">←</div>
+    <span class="detail-time" id="detail-time"></span>
+    <div class="btn-icon danger" id="btn-kirje-delete">🗑</div>
+  </div>
+  <div class="detail-body">
+    <img id="detail-img" src="" alt="" class="hidden">
+    <div class="detail-audio hidden" id="detail-audio">
+      <button class="detail-play" id="btn-detail-play">▶</button>
+      <div>
+        <div class="detail-audio-lbl">Häälkommentaar</div>
+        <div class="detail-audio-dur" id="detail-dur">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RAPORT KUVA -->
+<div class="screen" id="screen-report">
+  <div class="report-header">
+    <div class="back-btn" id="btn-report-back">←</div>
+    <span class="report-title">Raport</span>
+  </div>
+  <div class="report-body">
+    <div class="report-info-box">
+      <div class="report-row">
+        <span class="report-lbl">Objekt</span>
+        <span class="report-val" id="report-obj">—</span>
+      </div>
+      <div class="report-row">
+        <span class="report-lbl">Kuupäev</span>
+        <span class="report-val" id="report-date">—</span>
+      </div>
+      <div class="report-row">
+        <span class="report-lbl">Kirjeid</span>
+        <span class="report-val" id="report-count">—</span>
+      </div>
+    </div>
+    <div class="report-preview">
+      <div class="report-preview-header">Piltide eelvaade</div>
+      <div class="report-thumbs" id="report-thumbs"></div>
+    </div>
+  </div>
+  <div class="report-actions">
+    <button class="btn-primary orange" id="btn-generate-pdf">
+      <span>📄</span><span>Genereeri PDF</span>
+    </button>
+  </div>
+</div>
+
+<!-- DIALOOGID -->
+<div class="dialog-bg" id="dialog-del-session">
+  <div class="dialog-box">
+    <div class="dialog-title">Kustuta inspektsioon?</div>
+    <div class="dialog-body">Kõik kirjed, pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
+    <div class="dialog-actions">
+      <button class="dialog-btn danger" id="btn-confirm-del-session">Kustuta</button>
+      <button class="dialog-btn cancel" id="btn-cancel-del-session">Tühista</button>
+    </div>
+  </div>
+</div>
+
+<div class="dialog-bg" id="dialog-del-kirje">
+  <div class="dialog-box">
+    <div class="dialog-title">Kustuta kirje?</div>
+    <div class="dialog-body">Pilt ja häälkommentaar kustutatakse jäädavalt.</div>
+    <div class="dialog-actions">
+      <button class="dialog-btn danger" id="btn-confirm-del-kirje">Kustuta</button>
+      <button class="dialog-btn cancel" id="btn-cancel-del-kirje">Tühista</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── DB ──────────────────────────────────────────────────────
+const DB_NAME = 'InspektorX';
+let db;
+
+function openDB() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open(DB_NAME, 1);
+    r.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('sessioonid')) {
+        d.createObjectStore('sessioonid', { keyPath: 'id' })
+         .createIndex('aeg', 'aeg', { unique: false });
+      }
+      if (!d.objectStoreNames.contains('kirjed')) {
+        const ks = d.createObjectStore('kirjed', { keyPath: 'id' });
+        ks.createIndex('sessId', 'sessId', { unique: false });
+        ks.createIndex('aeg', 'aeg', { unique: false });
+      }
+    };
+    r.onsuccess = e => { db = e.target.result; res(); };
+    r.onerror   = e => rej(e);
+  });
+}
+
+function dbAddSess(s) {
+  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readwrite'); tx.objectStore('sessioonid').add(s); tx.oncomplete=res; tx.onerror=rej; });
+}
+function dbAllSess() {
+  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readonly'); const r=tx.objectStore('sessioonid').index('aeg').getAll(); r.onsuccess=e=>res(e.target.result.reverse()); r.onerror=rej; });
+}
+function dbDelSess(id) {
+  return new Promise((res,rej) => { const tx=db.transaction('sessioonid','readwrite'); tx.objectStore('sessioonid').delete(id); tx.oncomplete=res; tx.onerror=rej; });
+}
+function dbAddKirje(k) {
+  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readwrite'); tx.objectStore('kirjed').add(k); tx.oncomplete=res; tx.onerror=rej; });
+}
+function dbKirjedBySess(sessId) {
+  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readonly'); const r=tx.objectStore('kirjed').index('sessId').getAll(sessId); r.onsuccess=e=>res(e.target.result.sort((a,b)=>a.aeg-b.aeg)); r.onerror=rej; });
+}
+function dbDelKirje(id) {
+  return new Promise((res,rej) => { const tx=db.transaction('kirjed','readwrite'); tx.objectStore('kirjed').delete(id); tx.oncomplete=res; tx.onerror=rej; });
+}
+function dbDelKirjedBySess(sessId) {
+  return new Promise(async (res,rej) => {
+    const kirjed = await dbKirjedBySess(sessId);
+    const tx = db.transaction('kirjed','readwrite');
+    kirjed.forEach(k => tx.objectStore('kirjed').delete(k.id));
+    tx.oncomplete=res; tx.onerror=rej;
+  });
+}
+
+// ── OLEK ────────────────────────────────────────────────────
+let activeSessId  = null;
+let activeKirjeId = null;
+let videoStream   = null;
+let facingMode    = 'environment';
+let capturedImg   = null;
+let recorder      = null;
+let audioChunks   = [];
+let audioBlob     = null;
+let audioURL      = null;
+let recInterval   = null;
+let recSecs       = 0;
+let detailAudio   = null;
+let reportSessId  = null;
+
+// ── UI ──────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── AVAKUVA ─────────────────────────────────────────────────
+async function refreshHome() {
+  try {
+    const all = await dbAllSess();
+    document.getElementById('home-count').textContent = all.length;
+    const list = document.getElementById('session-list');
+
+    if (all.length === 0) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div></div>';
+      return;
+    }
+
+    // Kirjete arv sessioonide kaupa
+    const counts = {};
+    for (const s of all) {
+      const k = await dbKirjedBySess(s.id);
+      counts[s.id] = k.length;
+    }
+
+    list.innerHTML = all.map(s => {
+      const n = counts[s.id] || 0;
+      const isOpen = s.avatud;
+      return `<div class="session-card${isOpen?' active-session':''}" data-id="${s.id}">
+        <div class="session-status${isOpen?' open':''}"></div>
+        <div class="session-info">
+          <div class="session-name">${escHtml(s.nimi)}</div>
+          <div class="session-meta">${fmtFull(s.aeg)} · ${n} kirjet</div>
+        </div>
+        <div class="session-arrow">›</div>
+      </div>`;
+    }).join('');
+
+    list.querySelectorAll('.session-card').forEach(el =>
+      el.addEventListener('click', () => openSession(+el.dataset.id))
+    );
+  } catch(e) { console.error(e); }
+}
+
+// ── UUS SESSIOON ─────────────────────────────────────────────
+function startNewSession() {
+  document.getElementById('session-name-input').value = '';
+  show('new-session');
+  setTimeout(() => document.getElementById('session-name-input').focus(), 300);
+}
+
+async function createSession() {
+  const nimi = document.getElementById('session-name-input').value.trim();
+  if (!nimi) { toast('Sisesta objekti nimi'); return; }
+
+  const sess = { id: Date.now(), aeg: Date.now(), nimi, avatud: true };
+  await dbAddSess(sess);
+  await refreshHome();
+  openSession(sess.id);
+}
+
+// ── SESSIOON ─────────────────────────────────────────────────
+async function openSession(id) {
+  activeSessId = id;
+  const all  = await dbAllSess();
+  const sess = all.find(s => s.id === id);
+  if (!sess) return;
+
+  document.getElementById('session-header-name').textContent = sess.nimi;
+  document.getElementById('cam-session-label').textContent = sess.nimi;
+
+  await refreshKirjed();
+  show('session');
+}
+
+async function refreshKirjed() {
+  const kirjed = await dbKirjedBySess(activeSessId);
+  const list   = document.getElementById('kirjed-list');
+
+  const all    = await dbAllSess();
+  const sess   = all.find(s => s.id === activeSessId);
+  document.getElementById('session-header-meta').textContent =
+    fmtFull(sess ? sess.aeg : Date.now()) + ' · ' + kirjed.length + ' kirjet';
+
+  if (kirjed.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" dokumenteerimiseks.</div></div>';
+    return;
+  }
+
+  list.innerHTML = kirjed.map((k, i) => {
+    const thumb = k.pilt
+      ? `<img class="kirje-thumb" src="${k.pilt}" alt="">`
+      : `<div class="kirje-thumb-empty">📷</div>`;
+    const audioBadge = k.heliSecs
+      ? `<span class="badge audio">🎙 ${fmtDur(k.heliSecs)}</span>` : '';
+    return `<div class="kirje-card" data-id="${k.id}">
+      <div class="kirje-num">${i+1}</div>
+      ${thumb}
+      <div class="kirje-body">
+        <div class="kirje-time">${fmtTime(k.aeg)}</div>
+        <div class="kirje-badges">${audioBadge}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.kirje-card').forEach(el =>
+    el.addEventListener('click', () => openDetail(+el.dataset.id))
+  );
+}
+
+// ── KAAMERA ─────────────────────────────────────────────────
+async function openCamera() {
+  try {
+    stopCamera();
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    videoStream = stream;
+    const v = document.getElementById('video-preview');
+    v.srcObject = stream;
+    try { await v.play(); } catch(_) {}
+    show('camera');
+  } catch(e) {
+    toast('Kaamera viga: ' + (e.message || e.name));
+  }
+}
+
+function stopCamera() {
+  if (!videoStream) return;
+  videoStream.getTracks().forEach(t => t.stop());
+  videoStream = null;
+  document.getElementById('video-preview').srcObject = null;
+}
+
+async function flipCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  await openCamera();
+}
+
+function takePicture() {
+  const v = document.getElementById('video-preview');
+  const w = v.videoWidth || 640;
+  const h = v.videoHeight || 480;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(v, 0, 0, w, h);
+
+  const fl = document.getElementById('flash');
+  fl.classList.add('on');
+  setTimeout(() => fl.classList.remove('on'), 150);
+
+  capturedImg = c.toDataURL('image/jpeg', 0.82);
+  document.getElementById('captured-img').src = capturedImg;
+  stopCamera();
+  resetAudio();
+  show('save');
+}
+
+// ── HELI ─────────────────────────────────────────────────────
+function resetAudio() {
+  if (recorder && recorder.state !== 'inactive') recorder.stop();
+  recorder = null;
+  clearInterval(recInterval); recInterval = null;
+  audioChunks = []; audioBlob = null;
+  if (audioURL) { URL.revokeObjectURL(audioURL); audioURL = null; }
+  recSecs = 0;
+  document.getElementById('btn-record').className = 'rec-btn';
+  document.getElementById('rec-label').textContent = 'Alusta salvestust';
+  document.getElementById('rec-timer').classList.add('hidden');
+  document.getElementById('btn-play-rec').classList.add('hidden');
+}
+
+async function toggleRec() {
+  if (recorder && recorder.state === 'recording') {
+    recorder.stop();
+    clearInterval(recInterval); recInterval = null;
+    document.getElementById('btn-record').className = 'rec-btn done';
+    document.getElementById('rec-label').textContent = 'Salvestus valmis ✓';
+    document.getElementById('rec-timer').classList.add('hidden');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    audioChunks = [];
+    let mime = '';
+    const types = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4'];
+    for (const t of types) {
+      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) { mime = t; break; }
+    }
+    recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+    recorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+    recorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      audioBlob = new Blob(audioChunks, { type: mime || 'audio/webm' });
+      audioURL  = URL.createObjectURL(audioBlob);
+      document.getElementById('btn-play-rec').classList.remove('hidden');
+    };
+    recorder.start(200);
+    recSecs = 0;
+    document.getElementById('btn-record').className = 'rec-btn recording';
+    document.getElementById('rec-label').textContent = 'Peata salvestus';
+    document.getElementById('rec-timer').classList.remove('hidden');
+    document.getElementById('rec-timer').textContent = '0:00';
+    recInterval = setInterval(() => {
+      recSecs++;
+      const m = Math.floor(recSecs/60), s = recSecs%60;
+      document.getElementById('rec-timer').textContent = m+':'+String(s).padStart(2,'0');
+    }, 1000);
+  } catch(e) {
+    toast('Mikrofon: ' + (e.message || e.name));
+  }
+}
+
+function playRec() {
+  if (!audioURL) return;
+  new Audio(audioURL).play().catch(() => toast('Taasesitus ebaõnnestus'));
+}
+
+// ── SALVESTA KIRJE ───────────────────────────────────────────
+async function saveKirje() {
+  if (!capturedImg) { toast('Pilt puudub'); return; }
+
+  let heliData = null, heliSecs = 0, heliType = null;
+  if (audioBlob) {
+    heliData = await toB64(audioBlob);
+    heliSecs = recSecs;
+    heliType = audioBlob.type;
+  }
+
+  const kirje = {
+    id: Date.now(), aeg: Date.now(),
+    sessId: activeSessId,
+    pilt: capturedImg,
+    heli: heliData, heliSecs, heliType
+  };
+
+  try {
+    await dbAddKirje(kirje);
+    capturedImg = null;
+    resetAudio();
+    await refreshKirjed();
+    show('session');
+    toast('Kirje lisatud ✓');
+  } catch(e) {
+    toast('Salvestamine ebaõnnestus');
+  }
+}
+
+function toB64(blob) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+
+// ── DETAIL ──────────────────────────────────────────────────
+async function openDetail(id) {
+  const kirjed = await dbKirjedBySess(activeSessId);
+  const kirje  = kirjed.find(k => k.id === id);
+  if (!kirje) return;
+  activeKirjeId = id;
+
+  document.getElementById('detail-time').textContent = fmtFull(kirje.aeg);
+
+  const img = document.getElementById('detail-img');
+  if (kirje.pilt) { img.src = kirje.pilt; img.classList.remove('hidden'); }
+  else            { img.classList.add('hidden'); }
+
+  const abox = document.getElementById('detail-audio');
+  if (kirje.heli) {
+    abox.classList.remove('hidden');
+    document.getElementById('detail-dur').textContent = fmtDur(kirje.heliSecs);
+    if (detailAudio) { detailAudio.pause(); detailAudio = null; }
+    const blob = b64Blob(kirje.heli, kirje.heliType || 'audio/webm');
+    detailAudio = new Audio(URL.createObjectURL(blob));
+  } else {
+    abox.classList.add('hidden');
+    detailAudio = null;
+  }
+  show('detail');
+}
+
+function b64Blob(b64, type) {
+  const bin = atob(b64.split(',')[1]);
+  const arr = new Uint8Array(bin.length);
+  for (let i=0; i<bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type });
+}
+
+// ── KUSTUTAMINE ─────────────────────────────────────────────
+function showDelSession()  { document.getElementById('dialog-del-session').classList.add('show'); }
+function hideDelSession()  { document.getElementById('dialog-del-session').classList.remove('show'); }
+function showDelKirje()    { document.getElementById('dialog-del-kirje').classList.add('show'); }
+function hideDelKirje()    { document.getElementById('dialog-del-kirje').classList.remove('show'); }
+
+async function doDelSession() {
+  await dbDelKirjedBySess(activeSessId);
+  await dbDelSess(activeSessId);
+  hideDelSession();
+  activeSessId = null;
+  await refreshHome();
+  show('home');
+  toast('Inspektsioon kustutatud');
+}
+
+async function doDelKirje() {
+  await dbDelKirje(activeKirjeId);
+  if (detailAudio) { detailAudio.pause(); detailAudio = null; }
+  hideDelKirje();
+  await refreshKirjed();
+  show('session');
+  toast('Kirje kustutatud');
+}
+
+// ── RAPORT ──────────────────────────────────────────────────
+async function openReport(sessId) {
+  reportSessId = sessId || activeSessId;
+  const all    = await dbAllSess();
+  const sess   = all.find(s => s.id === reportSessId);
+  const kirjed = await dbKirjedBySess(reportSessId);
+
+  document.getElementById('report-obj').textContent   = sess ? sess.nimi : '—';
+  document.getElementById('report-date').textContent  = sess ? fmtFull(sess.aeg) : '—';
+  document.getElementById('report-count').textContent = kirjed.length + ' kirjet';
+
+  const thumbsEl = document.getElementById('report-thumbs');
+  if (kirjed.length === 0) {
+    thumbsEl.innerHTML = '<div style="padding:12px;color:var(--text3);font-size:12px">Kirjeid pole</div>';
+  } else {
+    thumbsEl.innerHTML = kirjed.map(k =>
+      k.pilt
+        ? `<img class="report-thumb" src="${k.pilt}" alt="">`
+        : `<div class="report-thumb-empty">📷</div>`
+    ).join('');
+  }
+  show('report');
+}
+
+async function generatePDF() {
+  const all    = await dbAllSess();
+  const sess   = all.find(s => s.id === reportSessId);
+  const kirjed = await dbKirjedBySess(reportSessId);
+
+  if (kirjed.length === 0) { toast('Kirjeid pole — raportit ei saa luua'); return; }
+
+  toast('Genereerin PDF...');
+
+  const sessNimi = sess ? sess.nimi : 'Inspektsioon';
+  const kuupaev  = sess ? fmtFull(sess.aeg) : fmtFull(Date.now());
+
+  // Ehita HTML raport mälus ja prindi
+  let kirjedHTML = kirjed.map((k, i) => `
+    <div class="kirje-blokk">
+      <div class="kirje-header">
+        <span class="kirje-nr">Kirje ${i+1}</span>
+        <span class="kirje-aeg">${fmtFull(k.aeg)}</span>
+        ${k.heliSecs ? `<span class="kirje-heli">🎙 ${fmtDur(k.heliSecs)}</span>` : ''}
+      </div>
+      ${k.pilt ? `<img class="kirje-pilt" src="${k.pilt}">` : '<div class="kirje-pilt-puudub">Pilt puudub</div>'}
+    </div>
+  `).join('');
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<title>Inspektor X — ${sessNimi}</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 24px; }
+  .raport-header { border-bottom: 3px solid #0d4f8a; padding-bottom: 16px; margin-bottom: 24px; }
+  .raport-pealkiri { font-size: 24px; font-weight: 800; color: #0d4f8a; letter-spacing: .04em; }
+  .raport-meta { margin-top: 8px; font-size: 13px; color: #555; }
+  .raport-meta span { margin-right: 20px; }
+  .kirje-blokk { margin-bottom: 28px; page-break-inside: avoid; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+  .kirje-header { background: #f0f4f8; padding: 10px 14px; display: flex; gap: 16px; align-items: center; border-bottom: 1px solid #ddd; }
+  .kirje-nr { font-weight: 800; font-size: 13px; color: #0d4f8a; }
+  .kirje-aeg { font-size: 12px; color: #666; flex: 1; }
+  .kirje-heli { font-size: 12px; color: #0d8a6a; }
+  .kirje-pilt { width: 100%; max-height: 400px; object-fit: contain; display: block; background: #f8f8f8; }
+  .kirje-pilt-puudub { padding: 40px; text-align: center; color: #999; font-size: 14px; background: #f8f8f8; }
+  .raport-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 11px; color: #999; text-align: center; }
+  @media print {
+    body { padding: 0; }
+    .kirje-blokk { page-break-inside: avoid; }
+  }
+</style>
+</head><body>
+<div class="raport-header">
+  <div class="raport-pealkiri">INSPEKTOR X — Inspektsiooniakt</div>
+  <div class="raport-meta">
+    <span><strong>Objekt:</strong> ${escHtml(sessNimi)}</span>
+    <span><strong>Kuupäev:</strong> ${kuupaev}</span>
+    <span><strong>Kirjeid:</strong> ${kirjed.length}</span>
+  </div>
+</div>
+${kirjedHTML}
+<div class="raport-footer">Genereeritud Inspektor X rakendusega · ${fmtFull(Date.now())}</div>
+</body></html>`;
+
+  // Ava print dialoog
+  const win = window.open('', '_blank');
+  if (!win) { toast('Luba hüpikaknad brauseris'); return; }
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => {
+    setTimeout(() => {
+      win.print();
+    }, 500);
+  };
+}
+
+// ── ABIFUNKTSIOONID ──────────────────────────────────────────
+function fmtTime(ts) {
+  const d = Date.now() - ts;
+  if (d < 60e3)    return 'Äsja';
+  if (d < 3600e3)  return Math.floor(d/60e3)  + ' min tagasi';
+  if (d < 86400e3) return Math.floor(d/3600e3) + ' h tagasi';
+  return new Date(ts).toLocaleDateString('et-EE', { day:'numeric', month:'short' });
+}
+function fmtFull(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('et-EE', { day:'numeric', month:'long', year:'numeric' })
+       + ' · ' + d.toLocaleTimeString('et-EE', { hour:'2-digit', minute:'2-digit' });
+}
+function fmtDur(s) {
+  if (!s) return '0:00';
+  return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+}
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── SÜNDMUSED ────────────────────────────────────────────────
+
+// Avakuva
+document.getElementById('btn-new-session').addEventListener('click', startNewSession);
+document.getElementById('btn-close').addEventListener('click', () => window.close());
+
+// Uus sessioon
+document.getElementById('btn-new-back').addEventListener('click', () => show('home'));
+document.getElementById('btn-start-session').addEventListener('click', createSession);
+document.getElementById('session-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') createSession();
+});
+
+// Sessioon
+document.getElementById('btn-session-back').addEventListener('click', () => { activeSessId = null; refreshHome(); show('home'); });
+document.getElementById('btn-add-kirje').addEventListener('click', openCamera);
+document.getElementById('btn-session-report').addEventListener('click', () => openReport(activeSessId));
+document.getElementById('btn-session-delete').addEventListener('click', showDelSession);
+
+// Kaamera
+document.getElementById('btn-cam-close').addEventListener('click', () => { stopCamera(); show('session'); });
+document.getElementById('btn-shutter').addEventListener('click', takePicture);
+document.getElementById('btn-flip').addEventListener('click', flipCamera);
+
+// Salvesta
+document.getElementById('btn-save-back').addEventListener('click', () => { resetAudio(); capturedImg = null; show('session'); });
+document.getElementById('btn-record').addEventListener('click', toggleRec);
+document.getElementById('btn-play-rec').addEventListener('click', playRec);
+document.getElementById('btn-save-kirje').addEventListener('click', saveKirje);
+document.getElementById('btn-discard').addEventListener('click', () => { resetAudio(); capturedImg = null; show('session'); });
+
+// Detail
+document.getElementById('btn-detail-back').addEventListener('click', () => { if (detailAudio) detailAudio.pause(); show('session'); });
+document.getElementById('btn-detail-play').addEventListener('click', () => {
+  if (!detailAudio) return;
+  detailAudio.currentTime = 0;
+  detailAudio.play().catch(() => toast('Taasesitus ebaõnnestus'));
+});
+document.getElementById('btn-kirje-delete').addEventListener('click', showDelKirje);
+
+// Raport
+document.getElementById('btn-report-back').addEventListener('click', () => show('session'));
+document.getElementById('btn-generate-pdf').addEventListener('click', generatePDF);
+
+// Dialoogid — sessioon
+document.getElementById('btn-confirm-del-session').addEventListener('click', doDelSession);
+document.getElementById('btn-cancel-del-session').addEventListener('click', hideDelSession);
+document.getElementById('dialog-del-session').addEventListener('click', e => {
+  if (e.target === document.getElementById('dialog-del-session')) hideDelSession();
+});
+
+// Dialoogid — kirje
+document.getElementById('btn-confirm-del-kirje').addEventListener('click', doDelKirje);
+document.getElementById('btn-cancel-del-kirje').addEventListener('click', hideDelKirje);
+document.getElementById('dialog-del-kirje').addEventListener('click', e => {
+  if (e.target === document.getElementById('dialog-del-kirje')) hideDelKirje();
+});
+
+// ── KÄIVITUS ─────────────────────────────────────────────────
+openDB().then(refreshHome).catch(() => toast('Andmebaasi viga'));
+
+if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
