@@ -11,437 +11,414 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Inspektor X</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
 
-  :root {
-    --bg:      #0d1f2d;
-    --bg2:     #112233;
-    --bg3:     #163044;
-    --surface: #1a3a52;
-    --border:  #254d6b;
-    --accent:  #00c2a8;
-    --accent2: #f0a500;
-    --text:    #e8f4f8;
-    --text2:   #8aafc0;
-    --text3:   #4a6e82;
-    --red:     #ff5a5a;
-    --r:       14px;
-    --rsm:     8px;
-  }
+:root {
+  --bg:      #0d1f2d;
+  --bg2:     #112233;
+  --bg3:     #163044;
+  --surface: #1a3a52;
+  --border:  #254d6b;
+  --accent:  #00c2a8;
+  --amber:   #f0a500;
+  --text:    #e8f4f8;
+  --text2:   #8aafc0;
+  --text3:   #4a6e82;
+  --red:     #ff5a5a;
+  --r: 14px; --rsm: 8px;
+}
 
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; overflow:hidden; user-select:none; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; overflow:hidden; user-select:none; }
 
-  .screen { position:fixed; inset:0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity 0.2s ease; }
-  .screen.active { opacity:1; pointer-events:all; }
+.screen { position:fixed; inset:0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.screen.active { opacity:1; pointer-events:all; }
 
-  /* ── ÜLDISED KOMPONENDID ── */
-  .page-header {
-    padding: env(safe-area-inset-top,16px) 24px 12px;
-    padding-top: calc(env(safe-area-inset-top,0px) + 16px);
-    display:flex; align-items:center; gap:12px; flex-shrink:0;
-  }
-  .back-btn {
-    width:36px; height:36px; border-radius:50%;
-    background:var(--surface); border:1px solid var(--border);
-    display:flex; align-items:center; justify-content:center;
-    font-size:16px; cursor:pointer; flex-shrink:0;
-  }
-  .page-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; flex:1; color:var(--accent2); }
-  .page-title.accent { color:var(--accent2); }
-  .page-subtitle { font-size:10px; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-top:1px; }
+/* Üldised */
+.pg-header {
+  padding: calc(env(safe-area-inset-top,0px) + 16px) 24px 12px;
+  display:flex; align-items:center; gap:12px; flex-shrink:0;
+}
+.back-btn {
+  width:36px; height:36px; border-radius:50%;
+  background:var(--surface); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; cursor:pointer; flex-shrink:0;
+}
+.pg-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--amber); flex:1; }
+.pg-sub   { font-size:10px; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-top:2px; }
 
-  .btn-icon {
-    width:36px; height:36px; border-radius:50%; flex-shrink:0;
-    background:var(--surface); border:1px solid var(--border);
-    display:flex; align-items:center; justify-content:center;
-    font-size:16px; cursor:pointer; transition:all .15s;
-  }
-  .btn-icon:active { border-color:var(--accent); }
-  .btn-icon.danger:active { border-color:var(--red); color:var(--red); }
+.ic-btn {
+  width:36px; height:36px; border-radius:50%; flex-shrink:0;
+  background:var(--surface); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; cursor:pointer; transition:all .15s;
+}
+.ic-btn:active { border-color:var(--accent); }
+.ic-btn.red:active { border-color:var(--red); color:var(--red); }
 
-  .page-body { flex:1; overflow-y:auto; padding:0 24px 12px; display:flex; flex-direction:column; gap:10px; }
-  .page-nav {
-    padding: 8px 24px;
-    padding-bottom: calc(env(safe-area-inset-bottom,0px) + 12px);
-    display:flex; gap:10px; flex-shrink:0;
-  }
+.pg-body { flex:1; overflow-y:auto; padding:0 24px 12px; display:flex; flex-direction:column; gap:10px; }
+.pg-nav {
+  padding: 8px 24px calc(env(safe-area-inset-bottom,0px) + 12px);
+  display:flex; gap:8px; flex-shrink:0;
+}
 
-  .nav-btn {
-    flex:1; height:52px;
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--r);
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    cursor:pointer; font-family:'Syne',sans-serif;
-    font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--text2); transition:all .15s;
-  }
-  .nav-btn:active { background:var(--bg3); border-color:var(--accent); color:var(--accent); }
-  .nav-btn.primary { background:var(--accent); border-color:var(--accent); color:#0d1f2d; }
-  .nav-btn.primary:active { opacity:.85; transform:scale(.97); }
-  .nav-btn.amber { background:var(--accent2); border-color:var(--accent2); color:#0d1f2d; }
-  .nav-btn.amber:active { opacity:.85; transform:scale(.97); }
-  .nav-btn.icon-only { flex:0; width:52px; }
+.btn {
+  flex:1; height:52px; border-radius:var(--r);
+  background:var(--surface); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  cursor:pointer; font-family:'Syne',sans-serif;
+  font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--text2); transition:all .15s;
+}
+.btn:active { background:var(--bg3); border-color:var(--accent); color:var(--accent); }
+.btn.green  { background:var(--accent); border-color:var(--accent); color:#0d1f2d; }
+.btn.green:active { opacity:.85; transform:scale(.97); }
+.btn.amber  { background:var(--amber); border-color:var(--amber); color:#0d1f2d; }
+.btn.amber:active { opacity:.85; transform:scale(.97); }
+.btn.sq     { flex:0; width:52px; }
+.btn.col    { flex-direction:column; gap:3px; font-size:10px; }
 
-  /* ── KAARDID ── */
-  .card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--r); cursor:pointer; transition:border-color .15s;
-  }
-  .card:active { border-color:var(--accent); }
-  .card-inner { padding:14px 16px; display:flex; align-items:center; gap:12px; }
+/* Kaardid */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); cursor:pointer; transition:border-color .15s; }
+.card:active { border-color:var(--accent); }
+.card-row { padding:14px 16px; display:flex; align-items:center; gap:12px; }
+.card-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--amber); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.card-meta { font-size:10px; color:var(--amber); opacity:.65; margin-top:3px; letter-spacing:.04em; }
+.card-arr  { font-size:18px; color:var(--text3); }
 
-  .status-dot { width:8px; height:8px; border-radius:50%; background:var(--text3); flex-shrink:0; }
-  .status-dot.open { background:var(--accent); animation:blink 2s ease infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+/* Kirje kaart (seade) */
+.kirje-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; cursor:pointer; transition:border-color .15s; }
+.kirje-card:active { border-color:var(--amber); }
+.kirje-hdr { padding:10px 14px; display:flex; align-items:center; gap:10px; }
+.kirje-nr { width:26px; height:26px; border-radius:50%; background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Syne',sans-serif; font-size:11px; font-weight:800; color:var(--text3); flex-shrink:0; }
+.kirje-nimi { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--amber); flex:1; }
+.kirje-cnt { font-size:10px; color:var(--text3); }
+.kirje-thumbs { display:flex; gap:4px; padding:0 14px 10px; overflow-x:auto; }
+.k-thumb { width:54px; height:54px; border-radius:6px; object-fit:cover; flex-shrink:0; border:1px solid var(--border); }
+.k-thumb-e { width:54px; height:54px; border-radius:6px; background:var(--bg3); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--border); }
 
-  .card-info { flex:1; min-width:0; }
-  .card-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .card-meta { font-size:10px; color:var(--accent2); opacity:.7; margin-top:3px; letter-spacing:.04em; }
-  .card-arrow { font-size:18px; color:var(--text3); }
+/* Pilt kaart */
+.pilt-card { background:var(--bg3); border:1px solid var(--border); border-radius:var(--rsm); overflow:hidden; cursor:pointer; display:flex; align-items:stretch; min-height:64px; transition:border-color .15s; }
+.pilt-card:active { border-color:var(--amber); }
+.pilt-nr { width:30px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--text3); font-family:'Syne',sans-serif; flex-shrink:0; }
+.pilt-img { width:64px; min-height:64px; flex-shrink:0; object-fit:cover; display:block; }
+.pilt-img-e { width:64px; min-height:64px; flex-shrink:0; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:18px; }
+.pilt-body { flex:1; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.pilt-time { font-size:10px; color:var(--amber); opacity:.8; }
+.badge { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg2); color:var(--accent); }
 
-  /* Objekt kaart — erinev */
-  .obj-card {
-    background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--r); overflow:hidden; cursor:pointer; transition:border-color .15s;
-  }
-  .obj-card:active { border-color:var(--accent2); }
-  .obj-card-header { padding:10px 14px; display:flex; align-items:center; gap:10px; }
-  .obj-nr {
-    width:28px; height:28px; border-radius:50%;
-    background:var(--bg3); border:1px solid var(--border);
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Syne',sans-serif; font-size:11px; font-weight:800; color:var(--text3);
-    flex-shrink:0;
-  }
-  .obj-name { font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--accent2); flex:1; }
-  .obj-meta { font-size:10px; color:var(--text3); }
-  .obj-thumbs { display:flex; gap:4px; padding:0 14px 10px; overflow-x:auto; }
-  .obj-thumb { width:56px; height:56px; border-radius:6px; object-fit:cover; flex-shrink:0; border:1px solid var(--border); }
-  .obj-thumb-empty { width:56px; height:56px; border-radius:6px; background:var(--bg3); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--border); }
+/* Tühi olek */
+.empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text3); padding:48px; text-align:center; }
+.empty-ic { font-size:44px; opacity:.3; }
+.empty-tx { font-size:13px; line-height:1.6; }
 
-  /* Kirje kaart */
-  .kirje-card {
-    background:var(--bg3); border:1px solid var(--border);
-    border-radius:var(--rsm); overflow:hidden; cursor:pointer;
-    display:flex; align-items:stretch; min-height:64px; transition:border-color .15s;
-  }
-  .kirje-card:active { border-color:var(--accent2); }
-  .kirje-num { width:32px; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--text3); font-family:'Syne',sans-serif; flex-shrink:0; }
-  .kirje-thumb { width:64px; min-height:64px; flex-shrink:0; object-fit:cover; display:block; }
-  .kirje-thumb-empty { width:64px; min-height:64px; flex-shrink:0; background:var(--bg2); display:flex; align-items:center; justify-content:center; font-size:18px; }
-  .kirje-body { flex:1; padding:8px 10px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
-  .kirje-time { font-size:10px; color:var(--accent2); opacity:.8; }
-  .kirje-badges { display:flex; gap:5px; }
-  .badge { font-size:10px; padding:2px 6px; border-radius:4px; background:var(--bg2); color:var(--text3); }
-  .badge.audio { color:var(--accent); }
+/* Vorm */
+.form-body { flex:1; padding:0 24px; display:flex; flex-direction:column; gap:16px; }
+.f-label { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
+.f-input { width:100%; background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px 16px; color:var(--text); font-family:'DM Mono',monospace; font-size:15px; outline:none; caret-color:var(--accent); transition:border-color .15s; }
+.f-input:focus { border-color:var(--accent); }
+.f-input::placeholder { color:var(--text3); }
+.f-hint { font-size:11px; color:var(--text3); margin-top:6px; line-height:1.5; }
+.form-act { padding:14px 24px calc(env(safe-area-inset-bottom,0px) + 14px); }
+.btn-main { width:100%; height:52px; border-radius:var(--r); background:var(--accent); border:none; color:#0d1f2d; font-family:'Syne',sans-serif; font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-main:active { transform:scale(.97); opacity:.9; }
 
-  /* ── TÜHI OLEK ── */
-  .empty-state { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:var(--text3); padding:48px; text-align:center; }
-  .empty-icon { font-size:44px; opacity:.3; }
-  .empty-text { font-size:13px; line-height:1.6; }
+/* Hoiatus */
+.warn { margin:0 24px 8px; background:rgba(240,165,0,.1); border:1px solid var(--amber); border-radius:var(--rsm); padding:10px 14px; font-size:11px; color:var(--amber); line-height:1.5; }
 
-  /* ── VORM ── */
-  .form-body { flex:1; padding:0 24px; display:flex; flex-direction:column; gap:16px; }
-  .field-label { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); margin-bottom:8px; }
-  .field-input {
-    width:100%; background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--r); padding:14px 16px;
-    color:var(--text); font-family:'DM Mono',monospace; font-size:15px;
-    outline:none; caret-color:var(--accent); transition:border-color .15s;
-  }
-  .field-input:focus { border-color:var(--accent); }
-  .field-input::placeholder { color:var(--text3); }
-  .field-hint { font-size:11px; color:var(--text3); margin-top:6px; line-height:1.5; }
-  .form-actions { padding:14px 24px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); }
+/* Kaamera */
+#screen-camera { background:#000; position:relative; }
+#vid { width:100%; height:100%; object-fit:cover; display:block; }
+.cam-ov { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0; }
+.cam-top { padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
+.cam-lbl { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:rgba(255,255,255,.85); background:rgba(0,0,0,.45); padding:5px 12px; border-radius:20px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cam-close { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff; }
+.cam-bot { padding:0 24px 32px; display:flex; align-items:center; justify-content:center; gap:40px; }
+.shutter { width:80px; height:80px; border-radius:50%; background:#fff; border:4px solid rgba(255,255,255,.4); cursor:pointer; transition:transform .1s; box-shadow:0 0 0 2px rgba(255,255,255,.5); }
+.shutter:active { transform:scale(.9); }
+.flip { width:48px; height:48px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; color:#fff; }
+.flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:999; transition:opacity .05s; }
+.flash.on { opacity:1; }
 
-  /* ── KAAMERA ── */
-  #screen-camera { background:#000; position:relative; }
-  #video-preview { width:100%; height:100%; object-fit:cover; display:block; }
-  .cam-overlay { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:env(safe-area-inset-top,20px) 0 env(safe-area-inset-bottom,20px) 0; }
-  .cam-top { padding:20px 24px; display:flex; justify-content:space-between; align-items:center; }
-  .cam-label { font-family:'Syne',sans-serif; font-size:11px; font-weight:700; color:rgba(255,255,255,.85); background:rgba(0,0,0,.45); padding:5px 12px; border-radius:20px; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .cam-close { width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.15); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:#fff; }
-  .cam-bottom { padding:0 24px 32px; display:flex; align-items:center; justify-content:center; gap:40px; }
-  .shutter-btn { width:80px; height:80px; border-radius:50%; background:#fff; border:4px solid rgba(255,255,255,.4); cursor:pointer; transition:transform .1s; box-shadow:0 0 0 2px rgba(255,255,255,.5); }
-  .shutter-btn:active { transform:scale(.9); }
-  .flip-btn { width:48px; height:48px; border-radius:50%; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; color:#fff; }
-  .flash { position:fixed; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:999; transition:opacity .05s; }
-  .flash.on { opacity:1; }
+/* Salvesta */
+.save-body { flex:1; overflow-y:auto; padding:0 24px; display:flex; flex-direction:column; gap:14px; }
+#cap-img { width:100%; border-radius:var(--r); max-height:260px; object-fit:cover; border:1px solid var(--border); display:block; }
+.audio-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px; display:flex; flex-direction:column; gap:10px; }
+.audio-lbl { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); }
+.audio-row { display:flex; align-items:center; gap:10px; }
+.rec-btn { flex:1; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:all .15s; }
+.rec-btn.rec { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); animation:pulse 1.5s ease infinite; }
+.rec-btn.ok  { border-color:var(--accent); color:var(--accent); }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,.3)} 50%{box-shadow:0 0 0 6px rgba(255,90,90,0)} }
+.rec-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
+.rec-btn.rec .rec-dot { animation:bdot 1s step-end infinite; }
+@keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0} }
+.rec-timer { font-size:11px; color:var(--red); letter-spacing:.1em; min-width:38px; text-align:center; }
+.play-btn { width:44px; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:var(--text2); transition:all .15s; }
+.play-btn:active { border-color:var(--accent); color:var(--accent); }
+.save-act { padding:14px 24px calc(env(safe-area-inset-bottom,0px) + 14px); display:flex; gap:8px; }
+.btn-salv { flex:1; height:52px; border-radius:var(--r); background:var(--accent); border:none; color:#0d1f2d; font-family:'Syne',sans-serif; font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
+.btn-salv:active { transform:scale(.97); opacity:.9; }
+.btn-disc { width:52px; height:52px; border-radius:var(--r); background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; color:var(--text3); transition:all .15s; }
+.btn-disc:active { border-color:var(--red); color:var(--red); }
+.hidden { display:none !important; }
 
-  /* ── SALVESTA ── */
-  .save-body { flex:1; overflow-y:auto; padding:0 24px; display:flex; flex-direction:column; gap:14px; }
-  #captured-img { width:100%; border-radius:var(--r); max-height:260px; object-fit:cover; border:1px solid var(--border); display:block; }
-  .audio-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:14px; display:flex; flex-direction:column; gap:10px; }
-  .audio-lbl { font-size:10px; letter-spacing:.15em; text-transform:uppercase; color:var(--text3); }
-  .audio-row { display:flex; align-items:center; gap:10px; }
-  .rec-btn { flex:1; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text2); transition:all .15s; }
-  .rec-btn.recording { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); animation:pulse 1.5s ease infinite; }
-  .rec-btn.done { border-color:var(--accent); color:var(--accent); }
-  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,.3)} 50%{box-shadow:0 0 0 6px rgba(255,90,90,0)} }
-  .rec-dot { width:8px; height:8px; border-radius:50%; background:currentColor; }
-  .rec-btn.recording .rec-dot { animation:bdot 1s step-end infinite; }
-  @keyframes bdot { 0%,100%{opacity:1} 50%{opacity:0} }
-  .rec-timer { font-size:11px; color:var(--red); letter-spacing:.1em; min-width:38px; text-align:center; }
-  .play-btn { width:44px; height:44px; border-radius:var(--rsm); background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; color:var(--text2); transition:all .15s; }
-  .play-btn:active { border-color:var(--accent); color:var(--accent); }
-  .hidden { display:none !important; }
-  .save-actions { padding:14px 24px; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); display:flex; gap:10px; }
-  .btn-save { flex:1; height:52px; border-radius:var(--r); background:var(--accent); border:none; color:#0d1f2d; font-family:'Syne',sans-serif; font-size:13px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; }
-  .btn-save:active { transform:scale(.97); opacity:.9; }
-  .btn-discard { width:52px; height:52px; border-radius:var(--r); background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; color:var(--text3); transition:all .15s; }
-  .btn-discard:active { border-color:var(--red); color:var(--red); }
+/* Detail */
+.det-audio { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; align-items:center; gap:14px; }
+.det-play { width:48px; height:48px; border-radius:50%; background:var(--accent); border:none; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0; transition:opacity .15s; color:#0d1f2d; }
+.det-play:active { opacity:.8; }
+.det-lbl { font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
+.det-dur { font-size:14px; color:var(--text); margin-top:3px; }
 
-  /* ── DETAIL ── */
-  .detail-audio { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; align-items:center; gap:14px; }
-  .detail-play { width:48px; height:48px; border-radius:50%; background:var(--accent); border:none; display:flex; align-items:center; justify-content:center; font-size:20px; cursor:pointer; flex-shrink:0; transition:opacity .15s; color:#0d1f2d; }
-  .detail-play:active { opacity:.8; }
-  .detail-audio-lbl { font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
-  .detail-audio-dur { font-size:14px; color:var(--text); margin-top:3px; }
+/* Raport */
+.r-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:10px; }
+.r-row { display:flex; justify-content:space-between; align-items:center; }
+.r-lbl { font-size:11px; color:var(--amber); opacity:.8; }
+.r-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
+.r-prev { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+.r-prev-hdr { padding:10px 14px; background:var(--bg3); font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
+.r-thumbs { padding:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
+.r-thumb { aspect-ratio:1; border-radius:5px; object-fit:cover; border:1px solid var(--border); display:block; width:100%; }
 
-  /* ── RAPORT ── */
-  .report-info-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px; display:flex; flex-direction:column; gap:10px; }
-  .report-row { display:flex; justify-content:space-between; align-items:center; }
-  .report-lbl { font-size:11px; color:var(--accent2); opacity:.8; }
-  .report-val { font-family:'Syne',sans-serif; font-size:13px; font-weight:700; color:var(--text); }
-  .report-preview { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-  .report-preview-hdr { padding:10px 14px; background:var(--bg3); font-size:10px; color:var(--text3); letter-spacing:.1em; text-transform:uppercase; }
-  .report-thumbs { padding:12px; display:grid; grid-template-columns:repeat(4,1fr); gap:5px; }
-  .report-thumb { aspect-ratio:1; border-radius:5px; object-fit:cover; border:1px solid var(--border); display:block; width:100%; }
-  .report-thumb-empty { aspect-ratio:1; border-radius:5px; background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:16px; border:1px solid var(--border); }
+/* Toast */
+.toast { position:fixed; bottom:calc(env(safe-area-inset-bottom,20px) + 90px); left:50%; transform:translateX(-50%) translateY(16px); background:var(--surface); border:1px solid var(--border); border-radius:var(--rsm); padding:10px 20px; font-size:12px; opacity:0; transition:all .22s ease; pointer-events:none; white-space:nowrap; z-index:1000; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
-  /* ── HOIATUS ── */
-  .warning-banner { margin:0 24px 10px; background:rgba(240,165,0,.12); border:1px solid var(--accent2); border-radius:var(--rsm); padding:10px 14px; font-size:11px; color:var(--accent2); line-height:1.5; }
+/* Dialog */
+.dlg-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s; }
+.dlg-bg.show { opacity:1; pointer-events:all; }
+.dlg-box { width:100%; background:var(--bg2); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding:24px 24px calc(env(safe-area-inset-bottom,0px) + 24px); transform:translateY(100%); transition:transform .25s ease; }
+.dlg-bg.show .dlg-box { transform:translateY(0); }
+.dlg-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:8px; }
+.dlg-body  { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
+.dlg-acts  { display:flex; flex-direction:column; gap:10px; }
+.dlg-btn   { width:100%; height:50px; border-radius:var(--r); border:1px solid var(--border); font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
+.dlg-btn.danger { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); }
+.dlg-btn.cancel { background:var(--surface); color:var(--text2); }
 
-  /* ── TOAST + DIALOG ── */
-  .toast { position:fixed; bottom:calc(env(safe-area-inset-bottom,20px) + 90px); left:50%; transform:translateX(-50%) translateY(16px); background:var(--surface); border:1px solid var(--border); border-radius:var(--rsm); padding:10px 20px; font-size:12px; letter-spacing:.04em; opacity:0; transition:all .22s ease; pointer-events:none; white-space:nowrap; z-index:1000; }
-  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-  .dialog-bg { position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:500; display:flex; align-items:flex-end; opacity:0; pointer-events:none; transition:opacity .2s; }
-  .dialog-bg.show { opacity:1; pointer-events:all; }
-  .dialog-box { width:100%; background:var(--bg2); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding:24px 24px calc(env(safe-area-inset-bottom,0px) + 24px); transform:translateY(100%); transition:transform .25s ease; }
-  .dialog-bg.show .dialog-box { transform:translateY(0); }
-  .dialog-title { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:8px; }
-  .dialog-body { font-size:13px; color:var(--text2); margin-bottom:20px; line-height:1.5; }
-  .dialog-actions { display:flex; flex-direction:column; gap:10px; }
-  .dialog-btn { width:100%; height:50px; border-radius:var(--r); border:1px solid var(--border); font-family:'Syne',sans-serif; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .15s; }
-  .dialog-btn.danger { background:rgba(255,90,90,.12); border-color:var(--red); color:var(--red); }
-  .dialog-btn.cancel { background:var(--surface); color:var(--text2); }
-
-  ::-webkit-scrollbar { width:3px; }
-  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+::-webkit-scrollbar { width:3px; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
 </style>
 </head>
 <body>
 <div class="flash" id="flash"></div>
 
-<!-- ══ AVAKUVA — sessioonide nimekiri ══ -->
+<!-- AVAKUVA -->
 <div class="screen active" id="screen-home">
-  <div class="page-header" style="padding-top:calc(env(safe-area-inset-top,0px) + 20px)">
+  <div class="pg-header">
     <div style="flex:1">
-      <div class="page-title accent">Inspektor X</div>
-      <div class="page-subtitle">Visuaalne kontroll</div>
+      <div class="pg-title">Inspektor X</div>
+      <div class="pg-sub">Visuaalne kontroll</div>
     </div>
     <div style="text-align:right">
-      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--accent2)" id="home-count">0</div>
+      <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--amber)" id="home-count">0</div>
       <div style="font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase">sessiooni</div>
     </div>
   </div>
-  <div id="warn-banner" class="warning-banner hidden"></div>
-  <div class="page-body" id="session-list"></div>
-  <div class="page-nav">
-    <div class="nav-btn primary" id="btn-new-session"><span>＋</span><span>Uus inspektsioon</span></div>
-    <div class="nav-btn icon-only" id="btn-close">✕</div>
+  <div id="warn-el" class="warn hidden"></div>
+  <div class="pg-body" id="sess-list"></div>
+  <div class="pg-nav">
+    <div class="btn green" id="btn-new-sess"><span>＋</span><span>Uus inspektsioon</span></div>
+    <div class="btn sq" id="btn-close">✕</div>
   </div>
 </div>
 
-<!-- ══ UUS SESSIOON ══ -->
-<div class="screen" id="screen-new-session">
-  <div class="page-header">
-    <div class="back-btn" id="btn-new-back">←</div>
-    <div><div class="page-title">Uus inspektsioon</div></div>
+<!-- UUS INSPEKTSIOON -->
+<div class="screen" id="screen-new-sess">
+  <div class="pg-header">
+    <div class="back-btn" id="btn-new-sess-back">←</div>
+    <div><div class="pg-title">Uus inspektsioon</div></div>
   </div>
   <div class="form-body">
     <div>
-      <div class="field-label">Objekti / asukoha nimi</div>
-      <input class="field-input" id="sess-name-input" type="text" placeholder="nt. Pumpla nr.3, Ladu B, Hoone 7..." autocomplete="off">
-      <div class="field-hint">Kirjelda lühidalt inspekteeritavat kohta. See ilmub raporti päisesse.</div>
+      <div class="f-label">Objekti / asukoha nimi</div>
+      <input class="f-input" id="sess-inp" type="text" placeholder="nt. Pumpla nr.3, Ladu B..." autocomplete="off">
+      <div class="f-hint">Kirjelda lühidalt inspekteeritavat kohta.</div>
     </div>
   </div>
-  <div class="form-actions">
-    <button class="btn-save" id="btn-create-session"><span>🔍</span><span>Alusta inspektsiooni</span></button>
+  <div class="form-act">
+    <button class="btn-main" id="btn-create-sess"><span>🔍</span><span>Alusta inspektsiooni</span></button>
   </div>
 </div>
 
-<!-- ══ SESSIOON — objektide nimekiri ══ -->
-<div class="screen" id="screen-session">
-  <div class="page-header">
+<!-- SESSIOON — kirjete nimekiri -->
+<div class="screen" id="screen-sess">
+  <div class="pg-header">
     <div class="back-btn" id="btn-sess-back">←</div>
     <div style="flex:1;min-width:0">
-      <div class="page-title" id="sess-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-      <div class="page-subtitle" id="sess-meta">—</div>
+      <div class="pg-title" id="sess-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+      <div class="pg-sub" id="sess-meta">—</div>
     </div>
-    <div class="btn-icon" id="btn-sess-report" title="Raport">📄</div>
-    <div class="btn-icon danger" id="btn-sess-delete" title="Kustuta">🗑</div>
+    <div class="ic-btn" id="btn-sess-rpt">📄</div>
+    <div class="ic-btn red" id="btn-sess-del">🗑</div>
   </div>
-  <div class="page-body" id="obj-list"></div>
-  <div class="page-nav">
-    <div class="nav-btn primary" id="btn-new-obj"><span>＋</span><span>Lisa kirje</span></div>
+  <div class="pg-body" id="kirje-list"></div>
+  <div class="pg-nav">
+    <div class="btn green" id="btn-new-kirje"><span>＋</span><span>Lisa kirje</span></div>
   </div>
 </div>
 
-<!-- ══ UUS OBJEKT ══ -->
-<div class="screen" id="screen-new-obj">
-  <div class="page-header">
-    <div class="back-btn" id="btn-obj-back">←</div>
-    <div><div class="page-title">Uus kirje</div></div>
+<!-- UUS KIRJE (seadme nimi) -->
+<div class="screen" id="screen-new-kirje">
+  <div class="pg-header">
+    <div class="back-btn" id="btn-new-kirje-back">←</div>
+    <div><div class="pg-title">Uus kirje</div></div>
   </div>
   <div class="form-body">
     <div>
-      <div class="field-label">Seadme / asukoha nimetus</div>
-      <input class="field-input" id="obj-name-input" type="text" placeholder="nt. Pump 24, Mootor 5, Mahuti S4..." autocomplete="off">
-      <div class="field-hint">Sisesta inspekteeritava seadme või asukoha täpne nimetus.</div>
+      <div class="f-label">Seadme / asukoha nimetus</div>
+      <input class="f-input" id="kirje-inp" type="text" placeholder="nt. Pump 24, Mootor 5, Mahuti S4..." autocomplete="off">
+      <div class="f-hint">Sisesta inspekteeritava seadme täpne nimetus.</div>
     </div>
   </div>
-  <div class="form-actions">
-    <button class="btn-save" id="btn-create-obj"><span>✓</span><span>Lisa kirje</span></button>
+  <div class="form-act">
+    <button class="btn-main" id="btn-create-kirje"><span>✓</span><span>Lisa kirje</span></button>
   </div>
 </div>
 
-<!-- ══ OBJEKT — kirjete vaade ══ -->
-<div class="screen" id="screen-obj">
-  <div class="page-header">
-    <div class="back-btn" id="btn-obj-view-back">←</div>
+<!-- KIRJE — piltide vaade -->
+<div class="screen" id="screen-kirje">
+  <div class="pg-header">
+    <div class="back-btn" id="btn-kirje-back">←</div>
     <div style="flex:1;min-width:0">
-      <div class="page-title" id="obj-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
-      <div class="page-subtitle" id="obj-meta">—</div>
+      <div class="pg-title" id="kirje-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</div>
+      <div class="pg-sub" id="kirje-meta">—</div>
     </div>
-    <div class="btn-icon danger" id="btn-obj-delete" title="Kustuta objekt">🗑</div>
+    <div class="ic-btn red" id="btn-kirje-del">🗑</div>
   </div>
-  <div class="page-body" id="kirjed-list"></div>
-  <div class="page-nav">
-    <div class="nav-btn primary" id="btn-add-kirje"><span>📸</span><span>Lisa pilt</span></div>
+  <div class="pg-body" id="pilt-list"></div>
+  <div class="pg-nav">
+    <div class="btn green" id="btn-add-pilt"><span>📸</span><span>Lisa pilt</span></div>
   </div>
 </div>
 
-<!-- ══ KAAMERA ══ -->
+<!-- KAAMERA -->
 <div class="screen" id="screen-camera">
-  <video id="video-preview" autoplay playsinline muted></video>
-  <div class="cam-overlay">
+  <video id="vid" autoplay playsinline muted></video>
+  <div class="cam-ov">
     <div class="cam-top">
-      <div class="cam-label" id="cam-label">—</div>
+      <div class="cam-lbl" id="cam-lbl">—</div>
       <div class="cam-close" id="btn-cam-close">✕</div>
     </div>
-    <div class="cam-bottom">
-      <div class="flip-btn" id="btn-flip">🔄</div>
-      <div class="shutter-btn" id="btn-shutter"></div>
+    <div class="cam-bot">
+      <div class="flip" id="btn-flip">🔄</div>
+      <div class="shutter" id="btn-shutter"></div>
       <div style="width:48px"></div>
     </div>
   </div>
 </div>
 
-<!-- ══ SALVESTA KIRJE ══ -->
+<!-- SALVESTA PILT -->
 <div class="screen" id="screen-save">
-  <div class="page-header">
+  <div class="pg-header">
     <div class="back-btn" id="btn-save-back">←</div>
-    <div><div class="page-title">Uus pilt</div><div class="page-subtitle" id="save-obj-label">—</div></div>
+    <div>
+      <div class="pg-title">Uus pilt</div>
+      <div class="pg-sub" id="save-lbl">—</div>
+    </div>
   </div>
   <div class="save-body">
-    <img id="captured-img" src="" alt="">
+    <img id="cap-img" src="" alt="">
     <div class="audio-box">
       <div class="audio-lbl">Häälkommentaar</div>
       <div class="audio-row">
-        <div class="rec-btn" id="btn-record"><span class="rec-dot"></span><span id="rec-label">Alusta salvestust</span></div>
+        <div class="rec-btn" id="btn-rec"><span class="rec-dot"></span><span id="rec-lbl">Alusta salvestust</span></div>
         <span class="rec-timer hidden" id="rec-timer">0:00</span>
-        <div class="play-btn hidden" id="btn-play-rec">▶</div>
+        <div class="play-btn hidden" id="btn-play">▶</div>
       </div>
     </div>
   </div>
-  <div class="save-actions">
-    <button class="btn-save" id="btn-save-kirje"><span>✓</span><span>Lisa pilt</span></button>
-    <div class="btn-discard" id="btn-discard">🗑</div>
+  <div class="save-act">
+    <button class="btn-salv" id="btn-salv"><span>✓</span><span>Lisa pilt</span></button>
+    <div class="btn-disc" id="btn-disc">🗑</div>
   </div>
 </div>
 
-<!-- ══ PÄRAST SALVESTAMIST — valikukuva ══ -->
-<div class="screen" id="screen-after-save">
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px">
-    <div style="font-size:48px">✓</div>
-    <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent2)" id="after-save-label">Pilt salvestatud</div>
-    <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6" id="after-save-sub">—</div>
+<!-- PÄRAST SALVESTAMIST -->
+<div class="screen" id="screen-after">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:32px">
+    <div style="font-size:52px">✓</div>
+    <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--amber)" id="after-lbl">Pilt salvestatud</div>
+    <div style="font-size:12px;color:var(--text3);text-align:center;line-height:1.6" id="after-sub">—</div>
   </div>
-  <div class="page-nav" style="flex-direction:column;gap:10px">
-    <div class="nav-btn primary" id="btn-after-jatka"><span>📸</span><span>Jätka — lisa veel üks pilt</span></div>
-    <div class="nav-btn" id="btn-after-uus"><span>＋</span><span>Uus kirje</span></div>
-    <div class="nav-btn amber" id="btn-after-lopeta"><span>📄</span><span>Lõpeta inspektsioon</span></div>
+  <div class="pg-nav">
+    <div class="btn green col" id="btn-jatka"><span style="font-size:22px">📸</span><span>Jätka</span></div>
+    <div class="btn col" id="btn-uus-kirje"><span style="font-size:22px">＋</span><span>Uus kirje</span></div>
+    <div class="btn amber col" id="btn-lopeta"><span style="font-size:22px">📄</span><span>Lõpeta</span></div>
   </div>
 </div>
 
-<!-- ══ DETAIL ══ -->
+<!-- DETAIL -->
 <div class="screen" id="screen-detail">
-  <div class="page-header">
-    <div class="back-btn" id="btn-detail-back">←</div>
-    <span style="flex:1;font-size:11px;color:var(--accent2);opacity:.8;letter-spacing:.06em" id="detail-time"></span>
-    <div class="btn-icon danger" id="btn-kirje-delete">🗑</div>
+  <div class="pg-header">
+    <div class="back-btn" id="btn-det-back">←</div>
+    <span style="flex:1;font-size:11px;color:var(--amber);opacity:.8;letter-spacing:.06em" id="det-time"></span>
+    <div class="ic-btn red" id="btn-det-del">🗑</div>
   </div>
-  <div class="page-body">
-    <img id="detail-img" src="" alt="" class="hidden" style="width:100%;border-radius:var(--r);border:1px solid var(--border)">
-    <div class="detail-audio hidden" id="detail-audio">
-      <button class="detail-play" id="btn-detail-play">▶</button>
-      <div><div class="detail-audio-lbl">Häälkommentaar</div><div class="detail-audio-dur" id="detail-dur">—</div></div>
+  <div class="pg-body">
+    <img id="det-img" src="" alt="" class="hidden" style="width:100%;border-radius:var(--r);border:1px solid var(--border)">
+    <div class="det-audio hidden" id="det-audio">
+      <button class="det-play" id="btn-det-play">▶</button>
+      <div>
+        <div class="det-lbl">Häälkommentaar</div>
+        <div class="det-dur" id="det-dur">—</div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ══ RAPORT ══ -->
-<div class="screen" id="screen-report">
-  <div class="page-header">
-    <div class="back-btn" id="btn-report-back">←</div>
-    <div class="page-title" style="flex:1">Raport</div>
+<!-- RAPORT -->
+<div class="screen" id="screen-rpt">
+  <div class="pg-header">
+    <div class="back-btn" id="btn-rpt-back">←</div>
+    <div class="pg-title" style="flex:1">Raport</div>
   </div>
-  <div class="page-body">
-    <div class="report-info-box">
-      <div class="report-row"><span class="report-lbl">Objekt</span><span class="report-val" id="r-obj">—</span></div>
-      <div class="report-row"><span class="report-lbl">Kuupäev</span><span class="report-val" id="r-date">—</span></div>
-      <div class="report-row"><span class="report-lbl">Kirjeid</span><span class="report-val" id="r-objs">—</span></div>
-      <div class="report-row"><span class="report-lbl">Pilte kokku</span><span class="report-val" id="r-kirjed">—</span></div>
+  <div class="pg-body">
+    <div class="r-box">
+      <div class="r-row"><span class="r-lbl">Objekt</span><span class="r-val" id="r-obj">—</span></div>
+      <div class="r-row"><span class="r-lbl">Kuupäev</span><span class="r-val" id="r-date">—</span></div>
+      <div class="r-row"><span class="r-lbl">Kirjeid</span><span class="r-val" id="r-kirjed">—</span></div>
+      <div class="r-row"><span class="r-lbl">Pilte kokku</span><span class="r-val" id="r-pildid">—</span></div>
     </div>
-    <div class="report-preview">
-      <div class="report-preview-hdr">Piltide eelvaade</div>
-      <div class="report-thumbs" id="r-thumbs"></div>
+    <div class="r-prev">
+      <div class="r-prev-hdr">Piltide eelvaade</div>
+      <div class="r-thumbs" id="r-thumbs"></div>
     </div>
   </div>
-  <div class="page-nav">
-    <button class="nav-btn amber" id="btn-gen-pdf" style="flex:1"><span>📄</span><span>Genereeri PDF raport</span></button>
+  <div class="pg-nav">
+    <button class="btn amber" id="btn-pdf" style="flex:1"><span>📄</span><span>Genereeri PDF</span></button>
   </div>
 </div>
 
-<!-- Dialoogid -->
-<div class="dialog-bg" id="dlg-del-sess">
-  <div class="dialog-box">
-    <div class="dialog-title">Kustuta inspektsioon?</div>
-    <div class="dialog-body">Kõik objektid, pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
-    <div class="dialog-actions">
-      <button class="dialog-btn danger" id="btn-ok-del-sess">Kustuta</button>
-      <button class="dialog-btn cancel" id="btn-no-del-sess">Tühista</button>
+<!-- DIALOOGID -->
+<div class="dlg-bg" id="dlg-sess">
+  <div class="dlg-box">
+    <div class="dlg-title">Kustuta inspektsioon?</div>
+    <div class="dlg-body">Kõik kirjed, pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
+    <div class="dlg-acts">
+      <button class="dlg-btn danger" id="dlg-sess-ok">Kustuta</button>
+      <button class="dlg-btn cancel" id="dlg-sess-no">Tühista</button>
     </div>
   </div>
 </div>
-<div class="dialog-bg" id="dlg-del-obj">
-  <div class="dialog-box">
-    <div class="dialog-title">Kustuta kirje?</div>
-    <div class="dialog-body">Kõik selle kirje pildid ja häälkommentaarid kustutatakse.</div>
-    <div class="dialog-actions">
-      <button class="dialog-btn danger" id="btn-ok-del-obj">Kustuta</button>
-      <button class="dialog-btn cancel" id="btn-no-del-obj">Tühista</button>
+<div class="dlg-bg" id="dlg-kirje">
+  <div class="dlg-box">
+    <div class="dlg-title">Kustuta kirje?</div>
+    <div class="dlg-body">Kõik selle kirje pildid ja häälkommentaarid kustutatakse jäädavalt.</div>
+    <div class="dlg-acts">
+      <button class="dlg-btn danger" id="dlg-kirje-ok">Kustuta</button>
+      <button class="dlg-btn cancel" id="dlg-kirje-no">Tühista</button>
     </div>
   </div>
 </div>
-<div class="dialog-bg" id="dlg-del-kirje">
-  <div class="dialog-box">
-    <div class="dialog-title">Kustuta kirje?</div>
-    <div class="dialog-body">Pilt ja häälkommentaar kustutatakse jäädavalt.</div>
-    <div class="dialog-actions">
-      <button class="dialog-btn danger" id="btn-ok-del-kirje">Kustuta</button>
-      <button class="dialog-btn cancel" id="btn-no-del-kirje">Tühista</button>
+<div class="dlg-bg" id="dlg-pilt">
+  <div class="dlg-box">
+    <div class="dlg-title">Kustuta pilt?</div>
+    <div class="dlg-body">Pilt ja häälkommentaar kustutatakse jäädavalt.</div>
+    <div class="dlg-acts">
+      <button class="dlg-btn danger" id="dlg-pilt-ok">Kustuta</button>
+      <button class="dlg-btn cancel" id="dlg-pilt-no">Tühista</button>
     </div>
   </div>
 </div>
@@ -451,8 +428,8 @@
 <script>
 'use strict';
 
-// ── DB ──────────────────────────────────────────────────────
-const DB_NAME = 'InspektorX2';
+// ── DB ───────────────────────────────────────────────────────
+const DB_NAME = 'InspektorX3';
 let db;
 
 function openDB() {
@@ -460,39 +437,39 @@ function openDB() {
     const r = indexedDB.open(DB_NAME, 1);
     r.onupgradeneeded = e => {
       const d = e.target.result;
-      if (!d.objectStoreNames.contains('sessioonid')) {
-        d.createObjectStore('sessioonid', { keyPath: 'id' }).createIndex('aeg','aeg',{unique:false});
-      }
-      if (!d.objectStoreNames.contains('objektid')) {
-        const os = d.createObjectStore('objektid', { keyPath: 'id' });
-        os.createIndex('sessId','sessId',{unique:false});
-        os.createIndex('aeg','aeg',{unique:false});
+      if (!d.objectStoreNames.contains('sess')) {
+        d.createObjectStore('sess', { keyPath: 'id' }).createIndex('aeg','aeg',{unique:false});
       }
       if (!d.objectStoreNames.contains('kirjed')) {
-        const ks = d.createObjectStore('kirjed', { keyPath: 'id' });
-        ks.createIndex('objId','objId',{unique:false});
-        ks.createIndex('aeg','aeg',{unique:false});
+        const k = d.createObjectStore('kirjed', { keyPath: 'id' });
+        k.createIndex('sessId','sessId',{unique:false});
+        k.createIndex('aeg','aeg',{unique:false});
+      }
+      if (!d.objectStoreNames.contains('pildid')) {
+        const p = d.createObjectStore('pildid', { keyPath: 'id' });
+        p.createIndex('kirjeId','kirjeId',{unique:false});
+        p.createIndex('aeg','aeg',{unique:false});
       }
     };
     r.onsuccess = e => { db = e.target.result; res(); };
-    r.onerror   = e => rej(e);
+    r.onerror   = rej;
   });
 }
 
-function dbGet(store, index, val) {
-  return new Promise((res, rej) => {
-    if (val === null || val === undefined) { res([]); return; }
-    const t = db.transaction(store, 'readonly');
-    const r = t.objectStore(store).index(index).getAll(val);
-    r.onsuccess = e => res(e.target.result);
-    r.onerror = rej;
-  });
-}
 function dbGetAll(store) {
   return new Promise((res, rej) => {
     const t = db.transaction(store, 'readonly');
     const r = t.objectStore(store).index('aeg').getAll();
     r.onsuccess = e => res(e.target.result.reverse());
+    r.onerror = rej;
+  });
+}
+function dbGetBy(store, index, val) {
+  return new Promise((res, rej) => {
+    if (val == null) { res([]); return; }
+    const t = db.transaction(store, 'readonly');
+    const r = t.objectStore(store).index(index).getAll(val);
+    r.onsuccess = e => res(e.target.result);
     r.onerror = rej;
   });
 }
@@ -510,8 +487,8 @@ function dbDel(store, id) {
     t.oncomplete = res; t.onerror = rej;
   });
 }
-async function dbDelMany(store, ids) {
-  if (!ids || ids.length === 0) return;
+function dbDelAll(store, ids) {
+  if (!ids || !ids.length) return Promise.resolve();
   return new Promise((res, rej) => {
     const t = db.transaction(store, 'readwrite');
     const s = t.objectStore(store);
@@ -520,23 +497,22 @@ async function dbDelMany(store, ids) {
   });
 }
 
-// ── OLEK ────────────────────────────────────────────────────
-let activeSessId  = null;
-let activeObjId   = null;
-let activeKirjeId = null;
-let reportSessId  = null;
-let videoStream   = null;
-let facingMode    = 'environment';
-let capturedImg   = null;
-let recorder      = null;
-let audioChunks   = [];
-let audioBlob     = null;
-let audioURL      = null;
-let recInterval   = null;
-let recSecs       = 0;
-let detailAudio   = null;
+// ── OLEK ─────────────────────────────────────────────────────
+let curSessId  = null;
+let curKirjeId = null;
+let curPiltId  = null;
+let videoStream = null;
+let facingMode  = 'environment';
+let capImg      = null;
+let recorder    = null;
+let audioChunks = [];
+let audioBlob   = null;
+let audioURL    = null;
+let recTimer    = null;
+let recSecs     = 0;
+let detAudio    = null;
 
-// ── UI ──────────────────────────────────────────────────────
+// ── UI ───────────────────────────────────────────────────────
 function show(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
@@ -547,149 +523,146 @@ function toast(msg) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2500);
 }
-function showDlg(id)  { document.getElementById(id).classList.add('show'); }
-function hideDlg(id)  { document.getElementById(id).classList.remove('show'); }
+function showDlg(id) { document.getElementById(id).classList.add('show'); }
+function hideDlg(id) { document.getElementById(id).classList.remove('show'); }
 
-// ── AVAKUVA ─────────────────────────────────────────────────
-async function refreshHome() {
-  const sessioonid = await dbGetAll('sessioonid');
+// ── AVAKUVA ──────────────────────────────────────────────────
+async function loadHome() {
+  const sessioonid = await dbGetAll('sess');
   document.getElementById('home-count').textContent = sessioonid.length;
 
-  // Hoiatus kui üle 10 sessiooni
-  const warn = document.getElementById('warn-banner');
+  const warn = document.getElementById('warn-el');
   if (sessioonid.length >= 10) {
-    warn.textContent = '⚠ Sul on ' + sessioonid.length + ' sessiooni. Kustuta lõpetatud inspektsioonid et vabastada mäluruumi.';
+    warn.textContent = '⚠ Sul on ' + sessioonid.length + ' sessiooni. Kustuta lõpetatud inspektsioonid.';
     warn.classList.remove('hidden');
   } else {
     warn.classList.add('hidden');
   }
 
-  const list = document.getElementById('session-list');
-  if (sessioonid.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon" alustamiseks.</div></div>';
+  const list = document.getElementById('sess-list');
+  if (!sessioonid.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ic">🔍</div><div class="empty-tx">Inspektsioone pole veel.<br>Vajuta "Uus inspektsioon".</div></div>';
     return;
   }
 
   const rows = await Promise.all(sessioonid.map(async s => {
-    const objs = await dbGet('objektid','sessId',s.id);
-    let kirjeCount = 0;
-    for (const o of objs) {
-      const k = await dbGet('kirjed','objId',o.id);
-      kirjeCount += k.length;
+    const kirjed = await dbGetBy('kirjed','sessId',s.id);
+    let piltCount = 0;
+    for (const k of kirjed) {
+      const p = await dbGetBy('pildid','kirjeId',k.id);
+      piltCount += p.length;
     }
-    return { s, objCount: objs.length, kirjeCount };
-  }));
-
-  list.innerHTML = rows.map(({s, objCount, kirjeCount}) =>
-    `<div class="card" data-id="${s.id}">
-      <div class="card-inner">
-        <div class="status-dot"></div>
-        <div class="card-info">
-          <div class="card-name">${escHtml(s.nimi)}</div>
-          <div class="card-meta">${fmtFull(s.aeg)} · ${objCount} kirjet · ${kirjeCount} pilti</div>
+    return `<div class="card" data-id="${s.id}">
+      <div class="card-row">
+        <div style="flex:1;min-width:0">
+          <div class="card-name">${esc(s.nimi)}</div>
+          <div class="card-meta">${fmtFull(s.aeg)} · ${kirjed.length} kirjet · ${piltCount} pilti</div>
         </div>
-        <div class="card-arrow">›</div>
+        <div class="card-arr">›</div>
       </div>
-    </div>`
-  ).join('');
-
-  list.querySelectorAll('.card').forEach(el =>
-    el.addEventListener('click', () => openSession(+el.dataset.id))
-  );
-}
-
-// ── SESSIOON ─────────────────────────────────────────────────
-async function openSession(id) {
-  activeSessId = id;
-  await refreshSession();
-  show('session');
-}
-
-async function refreshSession() {
-  const sessioonid = await dbGetAll('sessioonid');
-  const sess = sessioonid.find(s => s.id === activeSessId);
-  if (!sess) return;
-
-  const objektid = await dbGet('objektid','sessId',activeSessId);
-  objektid.sort((a,b) => a.aeg - b.aeg);
-
-  document.getElementById('sess-title').textContent = sess.nimi;
-  document.getElementById('sess-meta').textContent  = fmtFull(sess.aeg) + ' · ' + objektid.length + ' objekti';
-
-  const list = document.getElementById('obj-list');
-  if (objektid.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">Kirjeid pole veel.<br>Vajuta "Lisa kirje" et alustada dokumenteerimist.</div></div>';
-    return;
-  }
-
-  const rows = await Promise.all(objektid.map(async (o, i) => {
-    const kirjed = await dbGet('kirjed','objId',o.id);
-    kirjed.sort((a,b) => a.aeg - b.aeg);
-    const thumbs = kirjed.slice(0,4).map(k =>
-      k.pilt ? `<img class="obj-thumb" src="${k.pilt}" alt="">` : `<div class="obj-thumb-empty">📷</div>`
-    ).join('');
-    const audioBadge = kirjed.some(k => k.heliSecs) ? `<span class="badge audio">🎙</span>` : '';
-    return `<div class="obj-card" data-id="${o.id}">
-      <div class="obj-card-header">
-        <div class="obj-nr">${i+1}</div>
-        <div class="obj-name">${escHtml(o.nimi)}</div>
-        <div class="obj-meta">${kirjed.length} pilti ${audioBadge}</div>
-      </div>
-      ${kirjed.length > 0 ? `<div class="obj-thumbs">${thumbs}</div>` : ''}
     </div>`;
   }));
 
   list.innerHTML = rows.join('');
-  list.querySelectorAll('.obj-card').forEach(el =>
-    el.addEventListener('click', () => openObj(+el.dataset.id))
+  list.querySelectorAll('.card').forEach(el =>
+    el.addEventListener('click', () => openSess(+el.dataset.id))
   );
 }
 
-// ── OBJEKT ───────────────────────────────────────────────────
-async function openObj(id) {
-  activeObjId = id;
-  await refreshObj();
-  show('obj');
+// ── SESSIOON ─────────────────────────────────────────────────
+async function openSess(id) {
+  curSessId = id;
+  await loadSess();
+  show('sess');
 }
 
-async function refreshObj() {
-  if (!activeObjId) return;
-  const objektid = await dbGet('objektid','sessId',activeSessId);
-  const obj = objektid.find(o => o.id === activeObjId);
-  if (!obj) return;
+async function loadSess() {
+  const sessioonid = await dbGetAll('sess');
+  const s = sessioonid.find(x => x.id === curSessId);
+  if (!s) return;
 
-  const kirjed = await dbGet('kirjed','objId',activeObjId);
+  const kirjed = await dbGetBy('kirjed','sessId',curSessId);
   kirjed.sort((a,b) => a.aeg - b.aeg);
 
-  document.getElementById('obj-title').textContent = obj.nimi;
-  document.getElementById('obj-meta').textContent  = kirjed.length + ' pilti';
-  document.getElementById('cam-label').textContent = obj.nimi;
-  document.getElementById('save-obj-label').textContent = obj.nimi;
+  document.getElementById('sess-title').textContent = s.nimi;
+  document.getElementById('sess-meta').textContent  = fmtFull(s.aeg) + ' · ' + kirjed.length + ' kirjet';
 
-  const list = document.getElementById('kirjed-list');
-  if (kirjed.length === 0) {
-    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-text">Pilte pole veel.<br>Vajuta "Lisa pilt" et dokumenteerida.</div></div>';
+  const list = document.getElementById('kirje-list');
+  if (!kirjed.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ic">⚙️</div><div class="empty-tx">Kirjeid pole veel.<br>Vajuta "Lisa kirje".</div></div>';
     return;
   }
 
-  list.innerHTML = kirjed.map((k, i) => {
-    const thumb = k.pilt
-      ? `<img class="kirje-thumb" src="${k.pilt}" alt="">`
-      : `<div class="kirje-thumb-empty">📷</div>`;
-    const ab = k.heliSecs ? `<span class="badge audio">🎙 ${fmtDur(k.heliSecs)}</span>` : '';
+  const rows = await Promise.all(kirjed.map(async (k, i) => {
+    const pildid = await dbGetBy('pildid','kirjeId',k.id);
+    pildid.sort((a,b) => a.aeg - b.aeg);
+    const thumbs = pildid.slice(0,4).map(p =>
+      p.pilt ? `<img class="k-thumb" src="${p.pilt}">` : `<div class="k-thumb-e">📷</div>`
+    ).join('');
+    const hasAudio = pildid.some(p => p.heliSecs);
     return `<div class="kirje-card" data-id="${k.id}">
-      <div class="kirje-num">${i+1}</div>
+      <div class="kirje-hdr">
+        <div class="kirje-nr">${i+1}</div>
+        <div class="kirje-nimi">${esc(k.nimi)}</div>
+        <div class="kirje-cnt">${pildid.length} pilti${hasAudio ? ' · 🎙' : ''}</div>
+      </div>
+      ${pildid.length ? `<div class="kirje-thumbs">${thumbs}</div>` : ''}
+    </div>`;
+  }));
+
+  list.innerHTML = rows.join('');
+  list.querySelectorAll('.kirje-card').forEach(el =>
+    el.addEventListener('click', () => openKirje(+el.dataset.id))
+  );
+}
+
+// ── KIRJE ────────────────────────────────────────────────────
+async function openKirje(id) {
+  curKirjeId = id;
+  await loadKirje();
+  show('kirje');
+}
+
+async function loadKirje() {
+  const kirjed = await dbGetBy('kirjed','sessId',curSessId);
+  const k = kirjed.find(x => x.id === curKirjeId);
+  if (!k) return;
+
+  const pildid = await dbGetBy('pildid','kirjeId',curKirjeId);
+  pildid.sort((a,b) => a.aeg - b.aeg);
+
+  document.getElementById('kirje-title').textContent = k.nimi;
+  document.getElementById('kirje-meta').textContent  = pildid.length + ' pilti';
+  document.getElementById('cam-lbl').textContent     = k.nimi;
+  document.getElementById('save-lbl').textContent    = k.nimi;
+
+  const list = document.getElementById('pilt-list');
+  if (!pildid.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ic">📷</div><div class="empty-tx">Pilte pole veel.<br>Vajuta "Lisa pilt".</div></div>';
+    return;
+  }
+
+  list.innerHTML = pildid.map((p, i) => {
+    const thumb = p.pilt
+      ? `<img class="pilt-img" src="${p.pilt}">`
+      : `<div class="pilt-img-e">📷</div>`;
+    const ab = p.heliSecs ? `<span class="badge">🎙 ${fmtDur(p.heliSecs)}</span>` : '';
+    return `<div class="pilt-card" data-id="${p.id}">
+      <div class="pilt-nr">${i+1}</div>
       ${thumb}
-      <div class="kirje-body"><div class="kirje-time">${fmtTime(k.aeg)}</div><div class="kirje-badges">${ab}</div></div>
+      <div class="pilt-body">
+        <div class="pilt-time">${fmtTime(p.aeg)}</div>
+        <div>${ab}</div>
+      </div>
     </div>`;
   }).join('');
 
-  list.querySelectorAll('.kirje-card').forEach(el =>
+  list.querySelectorAll('.pilt-card').forEach(el =>
     el.addEventListener('click', () => openDetail(+el.dataset.id))
   );
 }
 
-// ── KAAMERA ─────────────────────────────────────────────────
+// ── KAAMERA ──────────────────────────────────────────────────
 async function openCamera() {
   try {
     stopCamera();
@@ -698,7 +671,7 @@ async function openCamera() {
       audio: false
     });
     videoStream = stream;
-    const v = document.getElementById('video-preview');
+    const v = document.getElementById('vid');
     v.srcObject = stream;
     try { await v.play(); } catch(_) {}
     show('camera');
@@ -710,19 +683,18 @@ function stopCamera() {
   if (!videoStream) return;
   videoStream.getTracks().forEach(t => t.stop());
   videoStream = null;
-  document.getElementById('video-preview').srcObject = null;
+  document.getElementById('vid').srcObject = null;
 }
 function takePicture() {
-  const v = document.getElementById('video-preview');
-  const w = v.videoWidth||640, h = v.videoHeight||480;
+  const v = document.getElementById('vid');
+  const w = v.videoWidth || 640, h = v.videoHeight || 480;
   const c = document.createElement('canvas');
-  c.width=w; c.height=h;
-  c.getContext('2d').drawImage(v,0,0,w,h);
-  const fl = document.getElementById('flash');
-  fl.classList.add('on');
-  setTimeout(() => fl.classList.remove('on'), 150);
-  capturedImg = c.toDataURL('image/jpeg', 0.82);
-  document.getElementById('captured-img').src = capturedImg;
+  c.width = w; c.height = h;
+  c.getContext('2d').drawImage(v, 0, 0, w, h);
+  document.getElementById('flash').classList.add('on');
+  setTimeout(() => document.getElementById('flash').classList.remove('on'), 150);
+  capImg = c.toDataURL('image/jpeg', 0.82);
+  document.getElementById('cap-img').src = capImg;
   stopCamera();
   resetAudio();
   show('save');
@@ -732,21 +704,21 @@ function takePicture() {
 function resetAudio() {
   if (recorder && recorder.state !== 'inactive') recorder.stop();
   recorder = null;
-  clearInterval(recInterval); recInterval = null;
+  clearInterval(recTimer); recTimer = null;
   audioChunks = []; audioBlob = null;
   if (audioURL) { URL.revokeObjectURL(audioURL); audioURL = null; }
   recSecs = 0;
-  document.getElementById('btn-record').className = 'rec-btn';
-  document.getElementById('rec-label').textContent = 'Alusta salvestust';
+  document.getElementById('btn-rec').className = 'rec-btn';
+  document.getElementById('rec-lbl').textContent = 'Alusta salvestust';
   document.getElementById('rec-timer').classList.add('hidden');
-  document.getElementById('btn-play-rec').classList.add('hidden');
+  document.getElementById('btn-play').classList.add('hidden');
 }
 async function toggleRec() {
   if (recorder && recorder.state === 'recording') {
     recorder.stop();
-    clearInterval(recInterval); recInterval = null;
-    document.getElementById('btn-record').className = 'rec-btn done';
-    document.getElementById('rec-label').textContent = 'Salvestus valmis ✓';
+    clearInterval(recTimer); recTimer = null;
+    document.getElementById('btn-rec').className = 'rec-btn ok';
+    document.getElementById('rec-lbl').textContent = 'Salvestus valmis ✓';
     document.getElementById('rec-timer').classList.add('hidden');
     return;
   }
@@ -763,210 +735,228 @@ async function toggleRec() {
       stream.getTracks().forEach(t => t.stop());
       audioBlob = new Blob(audioChunks, { type: mime || 'audio/webm' });
       audioURL  = URL.createObjectURL(audioBlob);
-      document.getElementById('btn-play-rec').classList.remove('hidden');
+      document.getElementById('btn-play').classList.remove('hidden');
     };
     recorder.start(200);
     recSecs = 0;
-    document.getElementById('btn-record').className = 'rec-btn recording';
-    document.getElementById('rec-label').textContent = 'Peata salvestus';
+    document.getElementById('btn-rec').className = 'rec-btn rec';
+    document.getElementById('rec-lbl').textContent = 'Peata salvestus';
     document.getElementById('rec-timer').classList.remove('hidden');
     document.getElementById('rec-timer').textContent = '0:00';
-    recInterval = setInterval(() => {
+    recTimer = setInterval(() => {
       recSecs++;
       document.getElementById('rec-timer').textContent =
         Math.floor(recSecs/60) + ':' + String(recSecs%60).padStart(2,'0');
     }, 1000);
-  } catch(e) { toast('Mikrofon: ' + (e.message||e.name)); }
+  } catch(e) { toast('Mikrofon: ' + (e.message || e.name)); }
 }
 function playRec() {
   if (!audioURL) return;
   new Audio(audioURL).play().catch(() => toast('Taasesitus ebaõnnestus'));
 }
 
-// ── SALVESTA KIRJE ───────────────────────────────────────────
-async function saveKirje() {
-  if (!capturedImg) { toast('Pilt puudub'); return; }
-  let heliData=null, heliSecs=0, heliType=null;
+// ── SALVESTA PILT ────────────────────────────────────────────
+async function savePilt() {
+  if (!capImg) { toast('Pilt puudub'); return; }
+  let heliData = null, heliSecs = 0, heliType = null;
   if (audioBlob) {
     heliData = await toB64(audioBlob);
     heliSecs = recSecs;
     heliType = audioBlob.type;
   }
   try {
-    await dbAdd('kirjed', { id: Date.now(), aeg: Date.now(), objId: activeObjId, pilt: capturedImg, heli: heliData, heliSecs, heliType });
-    capturedImg = null;
+    await dbAdd('pildid', {
+      id: Date.now(), aeg: Date.now(),
+      kirjeId: curKirjeId,
+      pilt: capImg,
+      heli: heliData, heliSecs, heliType
+    });
+    capImg = null;
     resetAudio();
-    await refreshObj();
-    // Näita valikukuva
-    const objektid = await dbGet('objektid','sessId',activeSessId);
-    const obj = objektid.find(o => o.id === activeObjId);
-    const kirjed = await dbGet('kirjed','objId',activeObjId);
-    document.getElementById('after-save-label').textContent = obj ? obj.nimi : 'Pilt salvestatud';
-    document.getElementById('after-save-sub').textContent = kirjed.length + ' pilti salvestatud';
-    show('after-save');
+    await loadKirje();
+
+    // Uuenda after-save kuva
+    const kirjed = await dbGetBy('kirjed','sessId',curSessId);
+    const k = kirjed.find(x => x.id === curKirjeId);
+    const pildid = await dbGetBy('pildid','kirjeId',curKirjeId);
+    document.getElementById('after-lbl').textContent = k ? k.nimi : 'Pilt salvestatud';
+    document.getElementById('after-sub').textContent = pildid.length + ' pilti salvestatud';
+    show('after');
   } catch(e) { toast('Salvestamine ebaõnnestus'); }
 }
 function toB64(blob) {
-  return new Promise((res,rej) => { const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(blob); });
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
 }
 
-// ── DETAIL ──────────────────────────────────────────────────
+// ── DETAIL ───────────────────────────────────────────────────
 async function openDetail(id) {
-  const kirjed = await dbGet('kirjed','objId',activeObjId);
-  const k = kirjed.find(x => x.id === id);
-  if (!k) return;
-  activeKirjeId = id;
-  document.getElementById('detail-time').textContent = fmtFull(k.aeg);
-  const img = document.getElementById('detail-img');
-  if (k.pilt) { img.src=k.pilt; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
-  const abox = document.getElementById('detail-audio');
-  if (k.heli) {
+  const pildid = await dbGetBy('pildid','kirjeId',curKirjeId);
+  const p = pildid.find(x => x.id === id);
+  if (!p) return;
+  curPiltId = id;
+
+  document.getElementById('det-time').textContent = fmtFull(p.aeg);
+  const img = document.getElementById('det-img');
+  if (p.pilt) { img.src = p.pilt; img.classList.remove('hidden'); }
+  else        { img.classList.add('hidden'); }
+
+  const abox = document.getElementById('det-audio');
+  if (p.heli) {
     abox.classList.remove('hidden');
-    document.getElementById('detail-dur').textContent = fmtDur(k.heliSecs);
-    if (detailAudio) { detailAudio.pause(); detailAudio=null; }
-    detailAudio = new Audio(URL.createObjectURL(b64Blob(k.heli, k.heliType||'audio/webm')));
-  } else { abox.classList.add('hidden'); detailAudio=null; }
+    document.getElementById('det-dur').textContent = fmtDur(p.heliSecs);
+    if (detAudio) { detAudio.pause(); detAudio = null; }
+    detAudio = new Audio(URL.createObjectURL(b64Blob(p.heli, p.heliType || 'audio/webm')));
+  } else {
+    abox.classList.add('hidden');
+    detAudio = null;
+  }
   show('detail');
 }
 function b64Blob(b64, type) {
-  const bin=atob(b64.split(',')[1]), arr=new Uint8Array(bin.length);
-  for (let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-  return new Blob([arr],{type});
+  const bin = atob(b64.split(',')[1]);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type });
 }
 
-// ── KUSTUTAMINE ─────────────────────────────────────────────
-async function doDelSess() {
-  const objs = await dbGet('objektid','sessId',activeSessId);
-  for (const o of objs) {
-    const ks = await dbGet('kirjed','objId',o.id);
-    await dbDelMany('kirjed', ks.map(k=>k.id));
+// ── KUSTUTAMINE ──────────────────────────────────────────────
+async function delSess() {
+  const kirjed = await dbGetBy('kirjed','sessId',curSessId);
+  for (const k of kirjed) {
+    const p = await dbGetBy('pildid','kirjeId',k.id);
+    await dbDelAll('pildid', p.map(x => x.id));
   }
-  await dbDelMany('objektid', objs.map(o=>o.id));
-  await dbDel('sessioonid', activeSessId);
-  hideDlg('dlg-del-sess');
-  activeSessId = null;
-  await refreshHome();
+  await dbDelAll('kirjed', kirjed.map(k => k.id));
+  await dbDel('sess', curSessId);
+  hideDlg('dlg-sess');
+  curSessId = null;
+  await loadHome();
   show('home');
   toast('Inspektsioon kustutatud');
 }
-async function doDelObj() {
-  const ks = await dbGet('kirjed','objId',activeObjId);
-  await dbDelMany('kirjed', ks.map(k=>k.id));
-  await dbDel('objektid', activeObjId);
-  hideDlg('dlg-del-obj');
-  activeObjId = null;
-  await refreshSession();
-  show('session');
+async function delKirje() {
+  const p = await dbGetBy('pildid','kirjeId',curKirjeId);
+  await dbDelAll('pildid', p.map(x => x.id));
+  await dbDel('kirjed', curKirjeId);
+  hideDlg('dlg-kirje');
+  curKirjeId = null;
+  await loadSess();
+  show('sess');
   toast('Kirje kustutatud');
 }
-async function doDelKirje() {
-  await dbDel('kirjed', activeKirjeId);
-  if (detailAudio) { detailAudio.pause(); detailAudio=null; }
-  hideDlg('dlg-del-kirje');
-  await refreshObj();
-  show('obj');
-  toast('Kirje kustutatud');
+async function delPilt() {
+  await dbDel('pildid', curPiltId);
+  if (detAudio) { detAudio.pause(); detAudio = null; }
+  hideDlg('dlg-pilt');
+  await loadKirje();
+  show('kirje');
+  toast('Pilt kustutatud');
 }
 
-// ── RAPORT ──────────────────────────────────────────────────
-async function openReport() {
-  reportSessId = activeSessId;
-  const sessioonid = await dbGetAll('sessioonid');
-  const sess = sessioonid.find(s => s.id === reportSessId);
-  const objs = await dbGet('objektid','sessId',reportSessId);
-  objs.sort((a,b) => a.aeg-b.aeg);
+// ── RAPORT ───────────────────────────────────────────────────
+async function openRpt() {
+  const sessioonid = await dbGetAll('sess');
+  const s = sessioonid.find(x => x.id === curSessId);
+  const kirjed = await dbGetBy('kirjed','sessId',curSessId);
+  kirjed.sort((a,b) => a.aeg - b.aeg);
 
-  let totalKirjed = 0;
-  const allPildid = [];
-  for (const o of objs) {
-    const ks = await dbGet('kirjed','objId',o.id);
-    totalKirjed += ks.length;
-    ks.sort((a,b)=>a.aeg-b.aeg);
-    ks.forEach(k => { if (k.pilt) allPildid.push(k.pilt); });
+  let totalPildid = 0;
+  const allThumbs = [];
+  for (const k of kirjed) {
+    const p = await dbGetBy('pildid','kirjeId',k.id);
+    totalPildid += p.length;
+    p.forEach(x => { if (x.pilt) allThumbs.push(x.pilt); });
   }
 
-  document.getElementById('r-obj').textContent    = sess ? sess.nimi : '—';
-  document.getElementById('r-date').textContent   = sess ? fmtFull(sess.aeg) : '—';
-  document.getElementById('r-objs').textContent   = objs.length + ' objekti';
-  document.getElementById('r-kirjed').textContent = totalKirjed + ' kirjet';
-
-  const thumbs = document.getElementById('r-thumbs');
-  thumbs.innerHTML = allPildid.slice(0,8).map(p =>
-    `<img class="report-thumb" src="${p}" alt="">`
+  document.getElementById('r-obj').textContent    = s ? s.nimi : '—';
+  document.getElementById('r-date').textContent   = s ? fmtFull(s.aeg) : '—';
+  document.getElementById('r-kirjed').textContent = kirjed.length + ' kirjet';
+  document.getElementById('r-pildid').textContent = totalPildid + ' pilti';
+  document.getElementById('r-thumbs').innerHTML   = allThumbs.slice(0,8).map(src =>
+    `<img class="r-thumb" src="${src}">`
   ).join('') || '<div style="padding:12px;color:var(--text3);font-size:11px">Pilte pole</div>';
 
-  show('report');
+  show('rpt');
 }
 
-async function generatePDF() {
-  const sessioonid = await dbGetAll('sessioonid');
-  const sess = sessioonid.find(s => s.id === reportSessId);
-  const objs = await dbGet('objektid','sessId',reportSessId);
-  objs.sort((a,b) => a.aeg-b.aeg);
+async function genPDF() {
+  const sessioonid = await dbGetAll('sess');
+  const s = sessioonid.find(x => x.id === curSessId);
+  const kirjed = await dbGetBy('kirjed','sessId',curSessId);
+  kirjed.sort((a,b) => a.aeg - b.aeg);
 
-  let totalKirjed = 0;
-  const objData = [];
-  for (const o of objs) {
-    const ks = await dbGet('kirjed','objId',o.id);
-    ks.sort((a,b)=>a.aeg-b.aeg);
-    totalKirjed += ks.length;
-    objData.push({ obj: o, kirjed: ks });
+  let totalPildid = 0;
+  const kirjeData = [];
+  for (const k of kirjed) {
+    const p = await dbGetBy('pildid','kirjeId',k.id);
+    p.sort((a,b) => a.aeg - b.aeg);
+    totalPildid += p.length;
+    kirjeData.push({ k, pildid: p });
   }
 
-  if (totalKirjed === 0) { toast('Kirjeid pole — raportit ei saa luua'); return; }
+  if (!totalPildid) { toast('Pilte pole — raportit ei saa luua'); return; }
   toast('Genereerin PDF...');
 
-  const objHTML = objData.map((od, oi) => {
-    const kirjedHTML = od.kirjed.map((k, ki) => `
-      <div class="kirje">
-        <div class="kirje-hdr"><span class="knr">Kirje ${ki+1}</span><span class="kaeg">${fmtFull(k.aeg)}</span>${k.heliSecs?`<span class="kheli">🎙 ${fmtDur(k.heliSecs)}</span>`:''}</div>
-        ${k.pilt ? `<img class="kpilt" src="${k.pilt}">` : '<div class="kpuudub">Pilt puudub</div>'}
+  const kirjedeHTML = kirjeData.map((kd, ki) => {
+    const pildiHTML = kd.pildid.map((p, pi) => `
+      <div class="pblokk">
+        <div class="phdr">
+          <span class="pnr">Pilt ${pi+1}</span>
+          <span class="paeg">${fmtFull(p.aeg)}</span>
+          ${p.heliSecs ? `<span class="pheli">🎙 ${fmtDur(p.heliSecs)}</span>` : ''}
+        </div>
+        ${p.pilt ? `<img class="ppilt" src="${p.pilt}">` : '<div class="ppole">Pilt puudub</div>'}
       </div>`).join('');
-    return `<div class="obj-blokk">
-      <div class="obj-hdr"><span class="onr">${oi+1}</span><span class="onimi">${escHtml(od.obj.nimi)}</span><span class="oknt">${od.kirjed.length} pilti</span></div>
-      ${kirjedHTML}
+    return `<div class="kblokk">
+      <div class="khdr"><span class="knr">${ki+1}</span><span class="knimi">${esc(kd.k.nimi)}</span><span class="kcnt">${kd.pildid.length} pilti</span></div>
+      ${pildiHTML}
     </div>`;
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>Inspektor X — ${escHtml(sess?.nimi||'Inspektsioon')}</title>
+<title>Inspektor X — ${esc(s?.nimi||'Inspektsioon')}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Arial,sans-serif;color:#1a1a2e;background:#fff;padding:20px;font-size:13px}
-.rpt-hdr{border-bottom:3px solid #0d4f8a;padding-bottom:14px;margin-bottom:20px}
-.rpt-title{font-size:22px;font-weight:800;color:#0d4f8a;letter-spacing:.03em}
-.rpt-sub{margin-top:6px;color:#555;font-size:12px}
-.rpt-sub span{margin-right:18px}
-.obj-blokk{margin-bottom:24px;border:1px solid #ccc;border-radius:6px;overflow:hidden;page-break-inside:avoid}
-.obj-hdr{background:#e8f0f8;padding:8px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ccc}
-.onr{width:24px;height:24px;border-radius:50%;background:#0d4f8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
-.onimi{font-weight:800;font-size:14px;color:#0d4f8a;flex:1}
-.oknt{font-size:11px;color:#666}
-.kirje{border-bottom:1px solid #eee;page-break-inside:avoid}
-.kirje:last-child{border-bottom:none}
-.kirje-hdr{padding:7px 14px;background:#f8f8f8;display:flex;gap:14px;align-items:center;border-bottom:1px solid #eee}
-.knr{font-weight:700;color:#333;font-size:12px}
-.kaeg{font-size:11px;color:#777;flex:1}
-.kheli{font-size:11px;color:#0d8a6a}
-.kpilt{width:100%;max-height:380px;object-fit:contain;display:block;background:#f5f5f5}
-.kpuudub{padding:32px;text-align:center;color:#aaa;font-size:13px;background:#f5f5f5}
-.rpt-ftr{margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center}
-@media print{body{padding:0}.obj-blokk{page-break-inside:avoid}}
+body{font-family:Arial,sans-serif;color:#1a1a2e;padding:20px;font-size:13px}
+.rhdr{border-bottom:3px solid #0d4f8a;padding-bottom:14px;margin-bottom:20px}
+.rtitle{font-size:22px;font-weight:800;color:#0d4f8a}
+.rsub{margin-top:6px;color:#555;font-size:12px}
+.rsub span{margin-right:16px}
+.kblokk{margin-bottom:24px;border:1px solid #ccc;border-radius:6px;overflow:hidden;page-break-inside:avoid}
+.khdr{background:#e8f0f8;padding:8px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ccc}
+.knr{width:24px;height:24px;border-radius:50%;background:#0d4f8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.knimi{font-weight:800;font-size:14px;color:#0d4f8a;flex:1}
+.kcnt{font-size:11px;color:#666}
+.pblokk{border-bottom:1px solid #eee;page-break-inside:avoid}
+.pblokk:last-child{border-bottom:none}
+.phdr{padding:7px 14px;background:#f8f8f8;display:flex;gap:14px;align-items:center;border-bottom:1px solid #eee}
+.pnr{font-weight:700;color:#333;font-size:12px}
+.paeg{font-size:11px;color:#777;flex:1}
+.pheli{font-size:11px;color:#0d8a6a}
+.ppilt{width:100%;max-height:380px;object-fit:contain;display:block;background:#f5f5f5}
+.ppole{padding:32px;text-align:center;color:#aaa;font-size:13px;background:#f5f5f5}
+.rftr{margin-top:20px;padding-top:10px;border-top:1px solid #ddd;font-size:10px;color:#aaa;text-align:center}
+@media print{body{padding:0}.kblokk{page-break-inside:avoid}}
 </style></head><body>
-<div class="rpt-hdr">
-  <div class="rpt-title">INSPEKTOR X — Inspektsiooniakt</div>
-  <div class="rpt-sub">
-    <span><b>Objekt:</b> ${escHtml(sess?.nimi||'—')}</span>
-    <span><b>Kuupäev:</b> ${fmtFull(sess?.aeg||Date.now())}</span>
-    <span><b>Kirjeid:</b> ${objs.length}</span>
-    <span><b>Kirjeid:</b> ${totalKirjed}</span>
+<div class="rhdr">
+  <div class="rtitle">INSPEKTOR X — Inspektsiooniakt</div>
+  <div class="rsub">
+    <span><b>Objekt:</b> ${esc(s?.nimi||'—')}</span>
+    <span><b>Kuupäev:</b> ${fmtFull(s?.aeg||Date.now())}</span>
+    <span><b>Kirjeid:</b> ${kirjed.length}</span>
+    <span><b>Pilte:</b> ${totalPildid}</span>
   </div>
 </div>
-${objHTML}
-<div class="rpt-ftr">Genereeritud Inspektor X rakendusega · ${fmtFull(Date.now())}</div>
+${kirjedeHTML}
+<div class="rftr">Genereeritud Inspektor X · ${fmtFull(Date.now())}</div>
 </body></html>`;
 
-  const win = window.open('','_blank');
+  const win = window.open('', '_blank');
   if (!win) { toast('Luba hüpikaknad brauseris'); return; }
   win.document.write(html);
   win.document.close();
@@ -975,122 +965,128 @@ ${objHTML}
 
 // ── ABIFUNKTSIOONID ──────────────────────────────────────────
 function fmtTime(ts) {
-  const d=Date.now()-ts;
-  if(d<60e3) return 'Äsja';
-  if(d<3600e3) return Math.floor(d/60e3)+' min tagasi';
-  if(d<86400e3) return Math.floor(d/3600e3)+' h tagasi';
-  return new Date(ts).toLocaleDateString('et-EE',{day:'numeric',month:'short'});
+  const d = Date.now() - ts;
+  if (d < 60e3)    return 'Äsja';
+  if (d < 3600e3)  return Math.floor(d/60e3) + ' min tagasi';
+  if (d < 86400e3) return Math.floor(d/3600e3) + ' h tagasi';
+  return new Date(ts).toLocaleDateString('et-EE', { day:'numeric', month:'short' });
 }
 function fmtFull(ts) {
-  const d=new Date(ts);
-  return d.toLocaleDateString('et-EE',{day:'numeric',month:'long',year:'numeric'})
-    +' · '+d.toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'});
+  const d = new Date(ts);
+  return d.toLocaleDateString('et-EE', { day:'numeric', month:'long', year:'numeric' })
+       + ' · ' + d.toLocaleTimeString('et-EE', { hour:'2-digit', minute:'2-digit' });
 }
-function fmtDur(s) { if(!s) return '0:00'; return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtDur(s) { if (!s) return '0:00'; return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+function esc(s)    { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── SÜNDMUSED ────────────────────────────────────────────────
 // Avakuva
-document.getElementById('btn-new-session').addEventListener('click', () => {
-  document.getElementById('sess-name-input').value = '';
-  show('new-session');
-  setTimeout(() => document.getElementById('sess-name-input').focus(), 300);
+document.getElementById('btn-new-sess').addEventListener('click', () => {
+  document.getElementById('sess-inp').value = '';
+  show('new-sess');
+  setTimeout(() => document.getElementById('sess-inp').focus(), 300);
 });
 document.getElementById('btn-close').addEventListener('click', () => window.close());
 
 // Uus sessioon
-document.getElementById('btn-new-back').addEventListener('click', () => show('home'));
-document.getElementById('btn-create-session').addEventListener('click', async () => {
-  const nimi = document.getElementById('sess-name-input').value.trim();
-  if (!nimi) { toast('Sisesta objekti nimi'); return; }
-  const sess = { id: Date.now(), aeg: Date.now(), nimi };
-  await dbAdd('sessioonid', sess);
-  await refreshHome();
-  activeSessId = sess.id;
-  await refreshSession();
-  show('session');
+document.getElementById('btn-new-sess-back').addEventListener('click', () => show('home'));
+document.getElementById('btn-create-sess').addEventListener('click', async () => {
+  const nimi = document.getElementById('sess-inp').value.trim();
+  if (!nimi) { toast('Sisesta nimi'); return; }
+  const s = { id: Date.now(), aeg: Date.now(), nimi };
+  await dbAdd('sess', s);
+  await loadHome();
+  curSessId = s.id;
+  await loadSess();
+  show('sess');
 });
-document.getElementById('sess-name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-create-session').click();
+document.getElementById('sess-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-create-sess').click();
 });
 
 // Sessioon
-document.getElementById('btn-sess-back').addEventListener('click', () => { refreshHome(); show('home'); });
-document.getElementById('btn-new-obj').addEventListener('click', () => {
-  document.getElementById('obj-name-input').value = '';
-  show('new-obj');
-  setTimeout(() => document.getElementById('obj-name-input').focus(), 300);
+document.getElementById('btn-sess-back').addEventListener('click', () => { loadHome(); show('home'); });
+document.getElementById('btn-new-kirje').addEventListener('click', () => {
+  document.getElementById('kirje-inp').value = '';
+  show('new-kirje');
+  setTimeout(() => document.getElementById('kirje-inp').focus(), 300);
 });
-document.getElementById('btn-sess-report').addEventListener('click', openReport);
-document.getElementById('btn-sess-delete').addEventListener('click', () => showDlg('dlg-del-sess'));
+document.getElementById('btn-sess-rpt').addEventListener('click', openRpt);
+document.getElementById('btn-sess-del').addEventListener('click', () => showDlg('dlg-sess'));
 
-// Uus pilt
-document.getElementById('btn-obj-back').addEventListener('click', () => show('session'));
-document.getElementById('btn-create-obj').addEventListener('click', async () => {
-  const nimi = document.getElementById('obj-name-input').value.trim();
-  if (!nimi) { toast('Sisesta objekti nimetus'); return; }
-  const obj = { id: Date.now(), aeg: Date.now(), sessId: activeSessId, nimi };
-  await dbAdd('objektid', obj);
-  activeObjId = obj.id;
-  await refreshObj();
-  show('obj');
+// Uus kirje
+document.getElementById('btn-new-kirje-back').addEventListener('click', () => show('sess'));
+document.getElementById('btn-create-kirje').addEventListener('click', async () => {
+  const nimi = document.getElementById('kirje-inp').value.trim();
+  if (!nimi) { toast('Sisesta nimetus'); return; }
+  const k = { id: Date.now(), aeg: Date.now(), sessId: curSessId, nimi };
+  await dbAdd('kirjed', k);
+  curKirjeId = k.id;
+  await loadKirje();
+  show('kirje');
 });
-document.getElementById('obj-name-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('btn-create-obj').click();
+document.getElementById('kirje-inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-create-kirje').click();
 });
 
-// Objekt vaade
-document.getElementById('btn-obj-view-back').addEventListener('click', () => { refreshSession(); show('session'); });
-document.getElementById('btn-add-kirje').addEventListener('click', openCamera);
-document.getElementById('btn-obj-delete').addEventListener('click', () => showDlg('dlg-del-obj'));
+// Kirje vaade
+document.getElementById('btn-kirje-back').addEventListener('click', () => { loadSess(); show('sess'); });
+document.getElementById('btn-add-pilt').addEventListener('click', openCamera);
+document.getElementById('btn-kirje-del').addEventListener('click', () => showDlg('dlg-kirje'));
 
 // Kaamera
-document.getElementById('btn-cam-close').addEventListener('click', () => { stopCamera(); show('obj'); });
+document.getElementById('btn-cam-close').addEventListener('click', () => { stopCamera(); show('kirje'); });
 document.getElementById('btn-shutter').addEventListener('click', takePicture);
-document.getElementById('btn-flip').addEventListener('click', async () => { facingMode = facingMode==='environment'?'user':'environment'; await openCamera(); });
+document.getElementById('btn-flip').addEventListener('click', async () => {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  await openCamera();
+});
 
 // Salvesta
-document.getElementById('btn-save-back').addEventListener('click', () => { resetAudio(); capturedImg=null; show('obj'); });
-document.getElementById('btn-record').addEventListener('click', toggleRec);
-document.getElementById('btn-play-rec').addEventListener('click', playRec);
-document.getElementById('btn-save-kirje').addEventListener('click', saveKirje);
-document.getElementById('btn-discard').addEventListener('click', () => { resetAudio(); capturedImg=null; show('obj'); });
-
-// Detail
-document.getElementById('btn-detail-back').addEventListener('click', () => { if(detailAudio) detailAudio.pause(); show('obj'); });
-document.getElementById('btn-detail-play').addEventListener('click', () => {
-  if (!detailAudio) return;
-  detailAudio.currentTime=0;
-  detailAudio.play().catch(() => toast('Taasesitus ebaõnnestus'));
-});
-document.getElementById('btn-kirje-delete').addEventListener('click', () => showDlg('dlg-del-kirje'));
-
-// Raport
-document.getElementById('btn-report-back').addEventListener('click', () => show('session'));
+document.getElementById('btn-save-back').addEventListener('click', () => { resetAudio(); capImg = null; show('kirje'); });
+document.getElementById('btn-rec').addEventListener('click', toggleRec);
+document.getElementById('btn-play').addEventListener('click', playRec);
+document.getElementById('btn-salv').addEventListener('click', savePilt);
+document.getElementById('btn-disc').addEventListener('click', () => { resetAudio(); capImg = null; show('kirje'); });
 
 // Pärast salvestamist
-document.getElementById('btn-after-jatka').addEventListener('click', () => openCamera());
-document.getElementById('btn-after-uus').addEventListener('click', () => {
-  document.getElementById('obj-name-input').value = '';
-  show('new-obj');
-  setTimeout(() => document.getElementById('obj-name-input').focus(), 300);
+document.getElementById('btn-jatka').addEventListener('click', openCamera);
+document.getElementById('btn-uus-kirje').addEventListener('click', () => {
+  document.getElementById('kirje-inp').value = '';
+  show('new-kirje');
+  setTimeout(() => document.getElementById('kirje-inp').focus(), 300);
 });
-document.getElementById('btn-after-lopeta').addEventListener('click', () => openReport());
-document.getElementById('btn-gen-pdf').addEventListener('click', generatePDF);
+document.getElementById('btn-lopeta').addEventListener('click', openRpt);
+
+// Detail
+document.getElementById('btn-det-back').addEventListener('click', () => {
+  if (detAudio) detAudio.pause();
+  show('kirje');
+});
+document.getElementById('btn-det-play').addEventListener('click', () => {
+  if (!detAudio) return;
+  detAudio.currentTime = 0;
+  detAudio.play().catch(() => toast('Taasesitus ebaõnnestus'));
+});
+document.getElementById('btn-det-del').addEventListener('click', () => showDlg('dlg-pilt'));
+
+// Raport
+document.getElementById('btn-rpt-back').addEventListener('click', () => show('sess'));
+document.getElementById('btn-pdf').addEventListener('click', genPDF);
 
 // Dialoogid
-document.getElementById('btn-ok-del-sess').addEventListener('click', doDelSess);
-document.getElementById('btn-no-del-sess').addEventListener('click', () => hideDlg('dlg-del-sess'));
-document.getElementById('dlg-del-sess').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-sess')) hideDlg('dlg-del-sess'); });
-document.getElementById('btn-ok-del-obj').addEventListener('click', doDelObj);
-document.getElementById('btn-no-del-obj').addEventListener('click', () => hideDlg('dlg-del-obj'));
-document.getElementById('dlg-del-obj').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-obj')) hideDlg('dlg-del-obj'); });
-document.getElementById('btn-ok-del-kirje').addEventListener('click', doDelKirje);
-document.getElementById('btn-no-del-kirje').addEventListener('click', () => hideDlg('dlg-del-kirje'));
-document.getElementById('dlg-del-kirje').addEventListener('click', e => { if(e.target===document.getElementById('dlg-del-kirje')) hideDlg('dlg-del-kirje'); });
+document.getElementById('dlg-sess-ok').addEventListener('click', delSess);
+document.getElementById('dlg-sess-no').addEventListener('click', () => hideDlg('dlg-sess'));
+document.getElementById('dlg-sess').addEventListener('click', e => { if (e.target === document.getElementById('dlg-sess')) hideDlg('dlg-sess'); });
+document.getElementById('dlg-kirje-ok').addEventListener('click', delKirje);
+document.getElementById('dlg-kirje-no').addEventListener('click', () => hideDlg('dlg-kirje'));
+document.getElementById('dlg-kirje').addEventListener('click', e => { if (e.target === document.getElementById('dlg-kirje')) hideDlg('dlg-kirje'); });
+document.getElementById('dlg-pilt-ok').addEventListener('click', delPilt);
+document.getElementById('dlg-pilt-no').addEventListener('click', () => hideDlg('dlg-pilt'));
+document.getElementById('dlg-pilt').addEventListener('click', e => { if (e.target === document.getElementById('dlg-pilt')) hideDlg('dlg-pilt'); });
 
 // ── KÄIVITUS ─────────────────────────────────────────────────
-openDB().then(refreshHome).catch(() => toast('Andmebaasi viga'));
+openDB().then(loadHome).catch(() => toast('Andmebaasi viga'));
 
 if ('serviceWorker' in navigator && !location.hostname.includes('claudeusercontent')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
