@@ -695,13 +695,15 @@ function stopCamera() {
 }
 function takePicture() {
   const v = document.getElementById('vid');
-  const w = v.videoWidth || 640, h = v.videoHeight || 480;
+  const origW = v.videoWidth || 640, origH = v.videoHeight || 480;
+  const scale = Math.min(1, 1280 / origW);
+  const w = Math.round(origW * scale), h = Math.round(origH * scale);
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
   c.getContext('2d').drawImage(v, 0, 0, w, h);
   document.getElementById('flash').classList.add('on');
   setTimeout(() => document.getElementById('flash').classList.remove('on'), 150);
-  capImg = c.toDataURL('image/jpeg', 0.82);
+  capImg = c.toDataURL('image/jpeg', 0.70);
   document.getElementById('cap-img').src = capImg;
   stopCamera();
   resetAudio();
